@@ -1,0 +1,114 @@
+import React from "react";
+import AppLoading from "expo-app-loading";
+import {
+  StyleSheet,
+  StatusBar,
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+} from "react-native";
+import { MaterialIcons } from "@expo/vector-icons";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useFonts } from "expo-font";
+
+import { wp, hp } from "../../config/dimensions";
+import { colors } from "../../res/colors";
+
+export default function ForgotPasswordScreen({ navigation }) {
+  let [fontsLoaded] = useFonts({
+    Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
+    SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
+    Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
+  });
+
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <View>
+        <TouchableOpacity
+          style={{ width: wp(38), justifyContent: "center" }}
+          onPress={() => navigation.pop()}
+        >
+          <MaterialIcons name="arrow-back" size={30} color={colors.black} />
+        </TouchableOpacity>
+        <View style={{ marginVertical: hp(25) }}>
+          <Text style={styles.title}>Forgot password,</Text>
+          <Text style={styles.desc}>
+            enter the email address associated with your account
+          </Text>
+        </View>
+        <View style={styles.inputWrap}>
+          <TextInput
+            placeholder="Email Address"
+            placeholderTextColor={colors.darkGrey}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            style={styles.inputTxt}
+          />
+        </View>
+      </View>
+      <TouchableOpacity style={styles.btn}>
+        <Text style={styles.btnText}>Reset Password</Text>
+      </TouchableOpacity>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    justifyContent: "space-between",
+    paddingHorizontal: wp(27),
+    paddingTop: hp(10),
+    paddingBottom: hp(25),
+    backgroundColor: colors.white,
+  },
+  title: {
+    fontFamily: "Bold",
+    fontSize: hp(22),
+    color: colors.black,
+  },
+  desc: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+    marginTop: wp(5),
+  },
+  inputWrap: {
+    flexDirection: "row",
+    height: hp(55),
+    backgroundColor: colors.lightGrey,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(10),
+  },
+  inputTxt: {
+    flex: 1,
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.black,
+    marginLeft: wp(27),
+  },
+  btn: {
+    height: hp(55),
+    backgroundColor: colors.primary,
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(10),
+    marginTop: wp(15),
+  },
+  btnText: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.white,
+  },
+});
