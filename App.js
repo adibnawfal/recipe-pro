@@ -1,6 +1,5 @@
 import React from "react";
 import AppLoading from "expo-app-loading";
-import { StyleSheet } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -13,7 +12,11 @@ import {
   RegisterScreen,
   ForgotPasswordScreen,
 } from "./src/screens/authentication";
-import { GuestHomeScreen } from "./src/screens/guest";
+import {
+  GuestHomeScreen,
+  GuestTrendingRecipeScreen,
+  GuestRecipeScreen,
+} from "./src/screens/guest";
 
 enableScreens();
 
@@ -29,6 +32,16 @@ function GuestUserNavigator() {
       <StackGuest.Screen
         name="GuestHome"
         component={GuestHomeScreen}
+        options={stackOption}
+      />
+      <StackGuest.Screen
+        name="GuestTrendingRecipe"
+        component={GuestTrendingRecipeScreen}
+        options={stackOption}
+      />
+      <StackGuest.Screen
+        name="GuestRecipe"
+        component={GuestRecipeScreen}
         options={stackOption}
       />
     </StackGuest.Navigator>
