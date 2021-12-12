@@ -33,7 +33,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
 
   const renderIngredient = (item) => {
     return (
-      <TouchableOpacity
+      <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -80,13 +80,13 @@ export default function GuestRecipeScreen({ navigation, route }) {
         >
           {item.measure}
         </Text>
-      </TouchableOpacity>
+      </View>
     );
   };
 
   const renderStep = (item) => {
     return (
-      <TouchableOpacity
+      <View
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
@@ -130,7 +130,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
         >
           {item.measure}
         </Text>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -394,7 +394,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="always"
         />
-        <SectionBreak />
+        {/* <SectionBreak />
         <Text
           style={{
             fontFamily: "Bold",
@@ -416,7 +416,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
             alignItems: "center",
             marginTop: hp(15),
           }}
-        />
+        /> */}
       </View>
     );
   };

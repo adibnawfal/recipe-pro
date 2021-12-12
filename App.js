@@ -18,7 +18,11 @@ import {
   GuestTrendingRecipeScreen,
   GuestRecipeScreen,
 } from "./src/screens/guest";
-import { HomeScreen } from "./src/screens/registered";
+import {
+  HomeScreen,
+  RecipeScreen,
+  TrendingRecipeScreen,
+} from "./src/screens/registered";
 
 enableScreens();
 
@@ -26,17 +30,55 @@ const stackOption = () => ({
   headerShown: false,
 });
 
-const TabRegistered = createBottomTabNavigator();
+const StackHome = createNativeStackNavigator();
 
-function RegisteredUserNavigator() {
+function HomeNavigator() {
   return (
-    <TabRegistered.Navigator initialRouteName="Home">
-      <TabRegistered.Screen
-        name="Home"
+    <StackHome.Navigator initialRouteName="HomeMain">
+      <StackHome.Screen
+        name="HomeMain"
         component={HomeScreen}
         options={stackOption}
       />
-    </TabRegistered.Navigator>
+      <StackHome.Screen
+        name="TrendingRecipe"
+        component={TrendingRecipeScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="Recipe"
+        component={RecipeScreen}
+        options={stackOption}
+      />
+    </StackHome.Navigator>
+  );
+}
+
+// const TabRegistered = createBottomTabNavigator();
+
+// function RegisteredUserNavigator() {
+//   return (
+//     <TabRegistered.Navigator initialRouteName="Home">
+//       <TabRegistered.Screen
+//         name="Home"
+//         component={HomeNavigator}
+//         options={stackOption}
+//       />
+//     </TabRegistered.Navigator>
+//   );
+// }
+
+const StackRegistered = createNativeStackNavigator();
+
+function RegisteredUserNavigator() {
+  return (
+    <StackRegistered.Navigator initialRouteName="Home">
+      <StackRegistered.Screen
+        name="Home"
+        component={HomeNavigator}
+        options={stackOption}
+      />
+    </StackRegistered.Navigator>
   );
 }
 

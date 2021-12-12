@@ -11,13 +11,14 @@ import {
   FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 
-export default function GuestTrendingRecipeScreen({ navigation, route }) {
+export default function TrendingRecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -39,7 +40,7 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("GuestRecipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { item })}
       >
         <ImageBackground
           source={item.image}
@@ -105,7 +106,13 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
               </View>
             </View>
             <View>
-              <View style={{ flexDirection: "row" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Text
                   style={{
                     fontFamily: "SemiBold",
@@ -117,6 +124,13 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
+                <TouchableOpacity>
+                  <MaterialCommunityIcons
+                    name="heart-outline"
+                    size={24}
+                    color={colors.white}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           </View>

@@ -11,6 +11,7 @@ import {
   FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
@@ -40,7 +41,7 @@ export default function HomeScreen({ navigation }) {
           marginRight: wp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("GuestRecipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { item })}
       >
         <ImageBackground
           source={item.image}
@@ -95,7 +96,13 @@ export default function HomeScreen({ navigation }) {
               >
                 {item.title}
               </Text>
-              <View style={{ flexDirection: "row" }}>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
                 <Text
                   style={{
                     fontFamily: "SemiBold",
@@ -107,6 +114,13 @@ export default function HomeScreen({ navigation }) {
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
+                <TouchableOpacity>
+                  <MaterialCommunityIcons
+                    name="heart-outline"
+                    size={24}
+                    color={colors.white}
+                  />
+                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -161,7 +175,7 @@ export default function HomeScreen({ navigation }) {
         style={{
           marginBottom: hp(15),
           paddingHorizontal: wp(27),
-          paddingTop: hp(10),
+          paddingTop: hp(25),
         }}
       >
         <View
@@ -243,7 +257,7 @@ export default function HomeScreen({ navigation }) {
                 alignItems: "center",
               }}
               onPress={() =>
-                navigation.navigate("GuestTrendingRecipe", { RECIPE_DATA })
+                navigation.navigate("TrendingRecipe", { RECIPE_DATA })
               }
             >
               <Text

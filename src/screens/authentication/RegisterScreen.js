@@ -78,7 +78,7 @@ export default function RegisterScreen({ navigation }) {
         </View>
         <View style={[styles.inputWrap, { marginBottom: 0 }]}>
           <TextInput
-            placeholder="Password"
+            placeholder="Confirm Password"
             placeholderTextColor={colors.darkGrey}
             secureTextEntry={true}
             style={styles.inputTxt}
