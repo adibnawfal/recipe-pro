@@ -17,60 +17,7 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 
-const DATA = [
-  {
-    id: 0,
-    title: "Night Market Style Honey Chicken Wings",
-    image: require("../../assets/images/recipe1.jpg"),
-    category: "Dinner",
-    cuisineType: "Malaysian",
-    time: "40 Min",
-    difficulty: "Normal",
-    rating: 4.8,
-  },
-  {
-    id: 1,
-    title: "Vegan Tropical Smoothie",
-    image: require("../../assets/images/recipe2.jpg"),
-    category: "Beverages",
-    cuisineType: "Other Cuisine",
-    time: "5 Min",
-    difficulty: "Easy",
-    rating: 4.6,
-  },
-  {
-    id: 2,
-    title: "Toast Bread with Blueberry Jam",
-    image: require("../../assets/images/recipe3.jpg"),
-    category: "Simple & Quick",
-    cuisineType: "Other Cuisine",
-    time: "40 Min",
-    difficulty: "Normal",
-    rating: 4.4,
-  },
-  {
-    id: 3,
-    title: "Taco",
-    image: require("../../assets/images/recipe4.jpg"),
-    category: "Dinner",
-    cuisineType: "Mexican",
-    time: "45 Min",
-    difficulty: "Easy",
-    rating: 4.5,
-  },
-  {
-    id: 4,
-    title: "Gulab Jamun",
-    image: require("../../assets/images/recipe5.jpg"),
-    category: "Dessert",
-    cuisineType: "Indian",
-    time: "40 Min",
-    difficulty: "Normal",
-    rating: 4.7,
-  },
-];
-
-export default function GuestTrendingRecipeScreen({ navigation }) {
+export default function GuestTrendingRecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -81,16 +28,18 @@ export default function GuestTrendingRecipeScreen({ navigation }) {
     return <AppLoading />;
   }
 
+  const { DATA } = route.params;
+
   const renderRecipe = (item) => {
     return (
       <TouchableOpacity
         style={{
-          height: hp(99),
+          height: hp(79),
           borderRadius: wp(10),
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("GuestRecipe")}
+        onPress={() => navigation.navigate("GuestRecipe", { item })}
       >
         <ImageBackground
           source={item.image}
@@ -160,7 +109,7 @@ export default function GuestTrendingRecipeScreen({ navigation }) {
                 <Text
                   style={{
                     fontFamily: "SemiBold",
-                    fontSize: hp(12),
+                    fontSize: hp(10),
                     color: colors.white,
                   }}
                 >

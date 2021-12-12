@@ -129,7 +129,7 @@ export default function GuestHomeScreen({ navigation }) {
       <TouchableOpacity
         style={{
           width: wp(190),
-          height: hp(250),
+          height: hp(220),
           borderRadius: wp(10),
           marginRight: wp(15),
           backgroundColor: colors.lightGrey,
@@ -213,7 +213,7 @@ export default function GuestHomeScreen({ navigation }) {
     return (
       <TouchableOpacity
         style={{
-          height: hp(55),
+          height: hp(50),
           marginBottom: hp(15),
           marginHorizontal: wp(27),
           backgroundColor: colors.lightGrey,
@@ -310,7 +310,9 @@ export default function GuestHomeScreen({ navigation }) {
                 justifyContent: "center",
                 alignItems: "center",
               }}
-              onPress={() => navigation.navigate("GuestTrendingRecipe")}
+              onPress={() =>
+                navigation.navigate("GuestTrendingRecipe", { DATA })
+              }
             >
               <Text
                 style={{
