@@ -106,7 +106,10 @@ export default function SignInScreen({ navigation }) {
               </Text>
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.btn}>
+          <TouchableOpacity
+            style={styles.btn}
+            onPress={() => navigation.navigate("RegisteredUser")}
+          >
             <Text style={styles.btnText}>Sign In</Text>
           </TouchableOpacity>
         </View>

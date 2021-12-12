@@ -3,6 +3,7 @@ import AppLoading from "expo-app-loading";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
+import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { enableScreens } from "react-native-screens";
 import { useFonts } from "expo-font";
 
@@ -17,12 +18,27 @@ import {
   GuestTrendingRecipeScreen,
   GuestRecipeScreen,
 } from "./src/screens/guest";
+import { HomeScreen } from "./src/screens/registered";
 
 enableScreens();
 
 const stackOption = () => ({
   headerShown: false,
 });
+
+const TabRegistered = createBottomTabNavigator();
+
+function RegisteredUserNavigator() {
+  return (
+    <TabRegistered.Navigator initialRouteName="Home">
+      <TabRegistered.Screen
+        name="Home"
+        component={HomeScreen}
+        options={stackOption}
+      />
+    </TabRegistered.Navigator>
+  );
+}
 
 const StackGuest = createNativeStackNavigator();
 
@@ -88,6 +104,11 @@ export default function App() {
           <StackApp.Screen
             name="GuestUser"
             component={GuestUserNavigator}
+            options={stackOption}
+          />
+          <StackApp.Screen
+            name="RegisteredUser"
+            component={RegisteredUserNavigator}
             options={stackOption}
           />
         </StackApp.Navigator>

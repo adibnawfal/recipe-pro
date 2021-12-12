@@ -19,7 +19,7 @@ import { colors } from "../../res/colors";
 import { RECIPE_DATA } from "../../data/RECIPE_DATA";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
-export default function GuestHomeScreen({ navigation }) {
+export default function HomeScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -164,15 +164,41 @@ export default function GuestHomeScreen({ navigation }) {
           paddingTop: hp(10),
         }}
       >
-        <TouchableOpacity
-          style={{ width: wp(38), justifyContent: "center" }}
-          onPress={() => navigation.pop()}
+        <View
+          style={{
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: hp(25),
+          }}
         >
-          <MaterialIcons name="arrow-back" size={30} color={colors.black} />
-        </TouchableOpacity>
-        <View style={{ marginVertical: hp(25) }}>
-          <Text style={styles.title}>Welcome Chef,</Text>
-          <Text style={styles.desc}>what do you want to cook today?</Text>
+          <View>
+            <Text style={styles.title}>Welcome Chef,</Text>
+            <Text style={styles.desc}>what do you want to cook today?</Text>
+          </View>
+          <TouchableOpacity
+            style={{
+              width: wp(49),
+              height: wp(49),
+              borderRadius: wp(49) / 2,
+              justifyContent: "center",
+            }}
+          >
+            <ImageBackground
+              source={require("../../assets/images/profilepicture.jpg")}
+              resizeMode="cover"
+              style={{ flex: 1 }}
+              imageStyle={{ borderRadius: wp(49) }}
+            >
+              <View
+                style={{
+                  flex: 1,
+                  borderRadius: wp(49) / 2,
+                  backgroundColor: "rgba(0, 0, 0, 0.3)",
+                }}
+              />
+            </ImageBackground>
+          </TouchableOpacity>
         </View>
         <View style={styles.searchWrap}>
           <TouchableOpacity>

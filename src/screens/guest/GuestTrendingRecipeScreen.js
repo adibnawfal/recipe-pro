@@ -28,7 +28,7 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
     return <AppLoading />;
   }
 
-  const { DATA } = route.params;
+  const { RECIPE_DATA } = route.params;
 
   const renderRecipe = (item) => {
     return (
@@ -191,11 +191,11 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
             color: colors.darkGrey,
           }}
         >
-          {DATA.length} Recipes
+          {RECIPE_DATA.length} Recipes
         </Text>
       </View>
       <FlatList
-        data={DATA}
+        data={RECIPE_DATA}
         renderItem={({ item }) => renderRecipe(item)}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="always"
