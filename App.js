@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoading from "expo-app-loading";
+import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { NavigationContainer } from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
@@ -20,14 +21,44 @@ import {
 } from "./src/screens/guest";
 import {
   HomeScreen,
+  AddRecipeScreen,
+  FavouriteScreen,
+  ProfileScreen,
   RecipeScreen,
   TrendingRecipeScreen,
 } from "./src/screens/registered";
+import { colors } from "./src/res/colors";
+import { hp } from "./src/config/dimensions";
 
 enableScreens();
 
 const stackOption = () => ({
   headerShown: false,
+});
+
+const tabOption = ({ route }) => ({
+  tabBarShowLabel: false,
+  tabBarIcon: ({ focused, color, size }) => {
+    let iconName;
+
+    if (route.name === "Home") {
+      iconName = focused ? "home" : "home-outline";
+    } else if (route.name === "AddRecipe") {
+      iconName = focused ? "plus-circle" : "plus-circle-outline";
+    } else if (route.name === "Favourite") {
+      iconName = focused ? "heart" : "heart-outline";
+    } else {
+      iconName = focused ? "account" : "account-outline";
+    }
+
+    return <MaterialCommunityIcons name={iconName} size={30} color={color} />;
+  },
+  tabBarActiveTintColor: colors.primary,
+  tabBarInactiveTintColor: colors.darkGrey,
+  tabBarStyle: {
+    height: hp(60),
+    backgroundColor: colors.lightGrey,
+  },
 });
 
 const StackHome = createNativeStackNavigator();
@@ -54,33 +85,90 @@ function HomeNavigator() {
   );
 }
 
-// const TabRegistered = createBottomTabNavigator();
+const StackAddRecipe = createNativeStackNavigator();
 
-// function RegisteredUserNavigator() {
-//   return (
-//     <TabRegistered.Navigator initialRouteName="Home">
-//       <TabRegistered.Screen
-//         name="Home"
-//         component={HomeNavigator}
-//         options={stackOption}
-//       />
-//     </TabRegistered.Navigator>
-//   );
-// }
+function AddRecipeNavigator() {
+  return (
+    <StackAddRecipe.Navigator initialRouteName="AddRecipeMain">
+      <StackAddRecipe.Screen
+        name="AddRecipeMain"
+        component={AddRecipeScreen}
+        options={stackOption}
+      />
+    </StackAddRecipe.Navigator>
+  );
+}
 
-const StackRegistered = createNativeStackNavigator();
+const StackFavourite = createNativeStackNavigator();
+
+function FavouriteNavigator() {
+  return (
+    <StackFavourite.Navigator initialRouteName="FavouriteMain">
+      <StackFavourite.Screen
+        name="FavouriteMain"
+        component={FavouriteScreen}
+        options={stackOption}
+      />
+    </StackFavourite.Navigator>
+  );
+}
+
+const StackProfile = createNativeStackNavigator();
+
+function ProfileNavigator() {
+  return (
+    <StackProfile.Navigator initialRouteName="ProfileMain">
+      <StackProfile.Screen
+        name="ProfileMain"
+        component={ProfileScreen}
+        options={stackOption}
+      />
+    </StackProfile.Navigator>
+  );
+}
+
+const TabRegistered = createBottomTabNavigator();
 
 function RegisteredUserNavigator() {
   return (
-    <StackRegistered.Navigator initialRouteName="Home">
-      <StackRegistered.Screen
+    <TabRegistered.Navigator screenOptions={tabOption} initialRouteName="Home">
+      <TabRegistered.Screen
         name="Home"
         component={HomeNavigator}
         options={stackOption}
       />
-    </StackRegistered.Navigator>
+      <TabRegistered.Screen
+        name="AddRecipe"
+        component={AddRecipeNavigator}
+        options={stackOption}
+      />
+      <TabRegistered.Screen
+        name="Favourite"
+        component={FavouriteNavigator}
+        options={stackOption}
+      />
+      <TabRegistered.Screen
+        name="Profile"
+        component={ProfileNavigator}
+        options={stackOption}
+      />
+    </TabRegistered.Navigator>
   );
 }
+
+// const StackRegistered = createNativeStackNavigator();
+
+// function RegisteredUserNavigator() {
+//   return (
+//     <StackRegistered.Navigator initialRouteName="Home">
+//       <StackRegistered.Screen
+//         name="Home"
+//         component={HomeNavigator}
+//         options={stackOption}
+//       />
+//     </StackRegistered.Navigator>
+//   );
+// }
 
 const StackGuest = createNativeStackNavigator();
 
