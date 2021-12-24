@@ -6,7 +6,6 @@ import {
   ImageBackground,
   Text,
   View,
-  TouchableOpacity,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -15,6 +14,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { Button } from "../../components";
 import WelcomeImage from "../../assets/images/welcome.jpg";
 
 export default function WelcomeScreen({ navigation }) {
@@ -58,20 +58,21 @@ export default function WelcomeScreen({ navigation }) {
                 Share, browse and collect various{"\n"}recipes all around the
                 world.
               </Text>
-              <TouchableOpacity
-                style={styles.btn}
-                onPress={() => navigation.navigate("SignIn")}
-              >
-                <Text style={styles.btnText}>Sign In</Text>
-              </TouchableOpacity>
-              <TouchableOpacity
-                style={styles.btnGuest}
-                onPress={() => navigation.navigate("GuestUser")}
-              >
-                <Text style={[styles.btnText, { color: colors.white }]}>
-                  Guest
-                </Text>
-              </TouchableOpacity>
+              <Button
+                title="Sign In"
+                navRoute={() => navigation.navigate("SignIn")}
+                addStyle={{ marginTop: hp(15) }}
+              />
+              <Button
+                title="Guest"
+                navRoute={() => navigation.navigate("GuestUser")}
+                addStyle={{
+                  backgroundColor: "transparent",
+                  borderWidth: wp(2),
+                  borderColor: colors.primary,
+                  marginTop: hp(15),
+                }}
+              />
             </View>
           </SafeAreaView>
         </LinearGradient>
@@ -107,27 +108,5 @@ const styles = StyleSheet.create({
     fontSize: hp(14),
     color: colors.white,
     marginBottom: wp(10),
-  },
-  btn: {
-    height: hp(55),
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    marginTop: wp(15),
-  },
-  btnGuest: {
-    height: hp(55),
-    borderWidth: wp(2),
-    borderColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    marginTop: wp(15),
-  },
-  btnText: {
-    fontFamily: "Bold",
-    fontSize: hp(12),
-    color: colors.white,
   },
 });

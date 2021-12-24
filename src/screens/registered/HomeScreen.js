@@ -6,7 +6,6 @@ import {
   StatusBar,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
 } from "react-native";
@@ -17,6 +16,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { InputText } from "../../components";
 import { RECIPE_DATA } from "../../data/RECIPE_DATA";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
@@ -138,6 +138,12 @@ export default function HomeScreen({ navigation }) {
           marginHorizontal: wp(27),
           backgroundColor: colors.lightGrey,
         }}
+        onPress={() =>
+          navigation.navigate("RecipeList", {
+            title: item.title,
+            RECIPE_DATA,
+          })
+        }
       >
         <ImageBackground
           source={item.image}
@@ -197,6 +203,7 @@ export default function HomeScreen({ navigation }) {
               borderRadius: wp(49) / 2,
               justifyContent: "center",
             }}
+            onPress={() => navigation.navigate("Profile")}
           >
             <ImageBackground
               source={require("../../assets/images/profilepicture.jpg")}
@@ -214,31 +221,7 @@ export default function HomeScreen({ navigation }) {
             </ImageBackground>
           </TouchableOpacity>
         </View>
-        <View style={styles.searchWrap}>
-          <TouchableOpacity>
-            <MaterialIcons
-              name="search"
-              size={24}
-              color={colors.darkGrey}
-              style={{ marginLeft: wp(27) }}
-            />
-          </TouchableOpacity>
-          <TextInput
-            placeholder="Search Recipes"
-            placeholderTextColor={colors.darkGrey}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.searchTxt}
-          />
-          <TouchableOpacity>
-            <MaterialIcons
-              name="filter-list"
-              size={24}
-              color={colors.darkGrey}
-              style={{ marginRight: wp(27) }}
-            />
-          </TouchableOpacity>
-        </View>
+        <InputText title="Search Recipes" />
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{
@@ -257,7 +240,10 @@ export default function HomeScreen({ navigation }) {
                 alignItems: "center",
               }}
               onPress={() =>
-                navigation.navigate("TrendingRecipe", { RECIPE_DATA })
+                navigation.navigate("RecipeList", {
+                  title: "Trending Recipe",
+                  RECIPE_DATA,
+                })
               }
             >
               <Text
@@ -325,21 +311,6 @@ const styles = StyleSheet.create({
     fontSize: hp(12),
     color: colors.darkGrey,
     marginTop: wp(5),
-  },
-  searchWrap: {
-    flexDirection: "row",
-    height: hp(55),
-    backgroundColor: colors.lightGrey,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-  },
-  searchTxt: {
-    flex: 1,
-    fontFamily: "Regular",
-    fontSize: hp(12),
-    color: colors.black,
-    marginLeft: wp(15),
   },
   cardWrap: {
     overflow: "hidden",

@@ -5,7 +5,6 @@ import {
   StatusBar,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -14,6 +13,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { Button, InputText } from "../../components";
 
 export default function ForgotPasswordScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
@@ -46,19 +46,9 @@ export default function ForgotPasswordScreen({ navigation }) {
             enter the email address associated with your account
           </Text>
         </View>
-        <View style={styles.inputWrap}>
-          <TextInput
-            placeholder="Email Address"
-            placeholderTextColor={colors.darkGrey}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.inputTxt}
-          />
-        </View>
+        <InputText title="Email Address" />
       </View>
-      <TouchableOpacity style={styles.btn}>
-        <Text style={styles.btnText}>Reset Password</Text>
-      </TouchableOpacity>
+      <Button title="Reset Password" navRoute={() => null} />
     </SafeAreaView>
   );
 }
@@ -82,33 +72,5 @@ const styles = StyleSheet.create({
     fontSize: hp(12),
     color: colors.darkGrey,
     marginTop: wp(5),
-  },
-  inputWrap: {
-    flexDirection: "row",
-    height: hp(55),
-    backgroundColor: colors.lightGrey,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-  },
-  inputTxt: {
-    flex: 1,
-    fontFamily: "Regular",
-    fontSize: hp(12),
-    color: colors.black,
-    marginLeft: wp(27),
-  },
-  btn: {
-    height: hp(55),
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    marginTop: wp(15),
-  },
-  btnText: {
-    fontFamily: "Bold",
-    fontSize: hp(12),
-    color: colors.white,
   },
 });

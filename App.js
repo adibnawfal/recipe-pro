@@ -2,7 +2,10 @@ import React from "react";
 import AppLoading from "expo-app-loading";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { NavigationContainer } from "@react-navigation/native";
+import {
+  NavigationContainer,
+  getFocusedRouteNameFromRoute,
+} from "@react-navigation/native";
 import { createNativeStackNavigator } from "@react-navigation/native-stack";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { enableScreens } from "react-native-screens";
@@ -25,7 +28,7 @@ import {
   FavouriteScreen,
   ProfileScreen,
   RecipeScreen,
-  TrendingRecipeScreen,
+  RecipeListScreen,
 } from "./src/screens/registered";
 import { colors } from "./src/res/colors";
 import { hp } from "./src/config/dimensions";
@@ -38,7 +41,7 @@ const stackOption = () => ({
 
 const tabOption = ({ route }) => ({
   tabBarShowLabel: false,
-  tabBarIcon: ({ focused, color, size }) => {
+  tabBarIcon: ({ focused, color }) => {
     let iconName;
 
     if (route.name === "Home") {
@@ -55,15 +58,31 @@ const tabOption = ({ route }) => ({
   },
   tabBarActiveTintColor: colors.primary,
   tabBarInactiveTintColor: colors.darkGrey,
-  tabBarStyle: {
-    height: hp(60),
-    backgroundColor: colors.lightGrey,
-  },
 });
+
+const tabHide = ({ navigation, route }) => {
+  React.useLayoutEffect(() => {
+    const tabHiddenRoutes = ["TrendingRecipe", "Recipe", "RecipeList"];
+
+    if (tabHiddenRoutes.includes(getFocusedRouteNameFromRoute(route))) {
+      navigation.setOptions({ tabBarStyle: { display: "none" } });
+    } else {
+      navigation.setOptions({
+        tabBarStyle: {
+          display: "flex",
+          height: hp(60),
+          backgroundColor: colors.lightGrey,
+        },
+      });
+    }
+  }, [navigation, route]);
+};
 
 const StackHome = createNativeStackNavigator();
 
-function HomeNavigator() {
+function HomeNavigator({ navigation, route }) {
+  tabHide({ navigation, route });
+
   return (
     <StackHome.Navigator initialRouteName="HomeMain">
       <StackHome.Screen
@@ -72,13 +91,13 @@ function HomeNavigator() {
         options={stackOption}
       />
       <StackHome.Screen
-        name="TrendingRecipe"
-        component={TrendingRecipeScreen}
+        name="Recipe"
+        component={RecipeScreen}
         options={stackOption}
       />
       <StackHome.Screen
-        name="Recipe"
-        component={RecipeScreen}
+        name="RecipeList"
+        component={RecipeListScreen}
         options={stackOption}
       />
     </StackHome.Navigator>
@@ -87,7 +106,9 @@ function HomeNavigator() {
 
 const StackAddRecipe = createNativeStackNavigator();
 
-function AddRecipeNavigator() {
+function AddRecipeNavigator({ navigation, route }) {
+  tabHide({ navigation, route });
+
   return (
     <StackAddRecipe.Navigator initialRouteName="AddRecipeMain">
       <StackAddRecipe.Screen
@@ -101,12 +122,19 @@ function AddRecipeNavigator() {
 
 const StackFavourite = createNativeStackNavigator();
 
-function FavouriteNavigator() {
+function FavouriteNavigator({ navigation, route }) {
+  tabHide({ navigation, route });
+
   return (
     <StackFavourite.Navigator initialRouteName="FavouriteMain">
       <StackFavourite.Screen
         name="FavouriteMain"
         component={FavouriteScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="Recipe"
+        component={RecipeScreen}
         options={stackOption}
       />
     </StackFavourite.Navigator>
@@ -115,12 +143,24 @@ function FavouriteNavigator() {
 
 const StackProfile = createNativeStackNavigator();
 
-function ProfileNavigator() {
+function ProfileNavigator({ navigation, route }) {
+  tabHide({ navigation, route });
+
   return (
     <StackProfile.Navigator initialRouteName="ProfileMain">
       <StackProfile.Screen
         name="ProfileMain"
         component={ProfileScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="Recipe"
+        component={RecipeScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="RecipeList"
+        component={RecipeListScreen}
         options={stackOption}
       />
     </StackProfile.Navigator>
@@ -155,20 +195,6 @@ function RegisteredUserNavigator() {
     </TabRegistered.Navigator>
   );
 }
-
-// const StackRegistered = createNativeStackNavigator();
-
-// function RegisteredUserNavigator() {
-//   return (
-//     <StackRegistered.Navigator initialRouteName="Home">
-//       <StackRegistered.Screen
-//         name="Home"
-//         component={HomeNavigator}
-//         options={stackOption}
-//       />
-//     </StackRegistered.Navigator>
-//   );
-// }
 
 const StackGuest = createNativeStackNavigator();
 

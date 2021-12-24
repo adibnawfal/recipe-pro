@@ -238,7 +238,6 @@ export default function RecipeScreen({ navigation, route }) {
           >
             {item.title}
           </Text>
-
           <Text
             style={{
               fontFamily: "Regular",

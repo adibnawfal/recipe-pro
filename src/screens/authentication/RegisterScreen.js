@@ -5,7 +5,6 @@ import {
   StatusBar,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -15,6 +14,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { Button, InputText } from "../../components";
 
 export default function RegisterScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
@@ -45,52 +45,10 @@ export default function RegisterScreen({ navigation }) {
           <Text style={styles.title}>Create account,</Text>
           <Text style={styles.desc}>sign up to get started</Text>
         </View>
-        <View style={styles.inputWrap}>
-          <TextInput
-            placeholder="Full Name"
-            placeholderTextColor={colors.darkGrey}
-            style={styles.inputTxt}
-          />
-        </View>
-        <View style={styles.inputWrap}>
-          <TextInput
-            placeholder="Email Address"
-            placeholderTextColor={colors.darkGrey}
-            keyboardType="email-address"
-            autoCapitalize="none"
-            style={styles.inputTxt}
-          />
-        </View>
-        <View style={styles.inputWrap}>
-          <TextInput
-            placeholder="Password"
-            placeholderTextColor={colors.darkGrey}
-            secureTextEntry={true}
-            style={styles.inputTxt}
-          />
-          <TouchableOpacity style={{ marginRight: wp(27) }}>
-            <MaterialCommunityIcons
-              name="eye-off"
-              size={24}
-              color={colors.darkGrey}
-            />
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.inputWrap, { marginBottom: 0 }]}>
-          <TextInput
-            placeholder="Confirm Password"
-            placeholderTextColor={colors.darkGrey}
-            secureTextEntry={true}
-            style={styles.inputTxt}
-          />
-          <TouchableOpacity style={{ marginRight: wp(27) }}>
-            <MaterialCommunityIcons
-              name="eye-off"
-              size={24}
-              color={colors.darkGrey}
-            />
-          </TouchableOpacity>
-        </View>
+        <InputText title="Full Name" />
+        <InputText title="Email Address" addStyle={{ marginTop: hp(15) }} />
+        <InputText title="Password" addStyle={{ marginVertical: hp(15) }} />
+        <InputText title="Confirm Password" />
       </View>
       <View style={{ width: "100%", alignItems: "center" }}>
         <View style={{ flexDirection: "row", alignItems: "center" }}>
@@ -107,9 +65,11 @@ export default function RegisterScreen({ navigation }) {
             </Text>
           </TouchableOpacity>
         </View>
-        <TouchableOpacity style={styles.btn}>
-          <Text style={styles.btnText}>Register</Text>
-        </TouchableOpacity>
+        <Button
+          title="Register"
+          navRoute={() => null}
+          addStyle={{ width: "100%", marginTop: hp(15) }}
+        />
       </View>
     </SafeAreaView>
   );
@@ -135,39 +95,9 @@ const styles = StyleSheet.create({
     color: colors.darkGrey,
     marginTop: wp(5),
   },
-  inputWrap: {
-    flexDirection: "row",
-    height: hp(55),
-    backgroundColor: colors.lightGrey,
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: hp(15),
-    borderRadius: wp(10),
-  },
-  inputTxt: {
-    flex: 1,
-    fontFamily: "Regular",
-    fontSize: hp(12),
-    color: colors.black,
-    marginLeft: wp(27),
-  },
   termsTxt: {
     fontFamily: "Bold",
     fontSize: hp(12),
     color: colors.black,
-  },
-  btn: {
-    width: "100%",
-    height: hp(55),
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    marginTop: wp(15),
-  },
-  btnText: {
-    fontFamily: "Bold",
-    fontSize: hp(12),
-    color: colors.white,
   },
 });

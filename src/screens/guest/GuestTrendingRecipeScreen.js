@@ -6,7 +6,6 @@ import {
   StatusBar,
   View,
   Text,
-  TextInput,
   TouchableOpacity,
   FlatList,
 } from "react-native";
@@ -16,6 +15,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { InputText } from "../../components";
 
 export default function GuestTrendingRecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
@@ -146,31 +146,7 @@ export default function GuestTrendingRecipeScreen({ navigation, route }) {
         <Text style={styles.headerTxt}>Trending Recipe</Text>
         <View style={{ width: wp(38) }} />
       </View>
-      <View style={styles.searchWrap}>
-        <TouchableOpacity>
-          <MaterialIcons
-            name="search"
-            size={24}
-            color={colors.darkGrey}
-            style={{ marginLeft: wp(27) }}
-          />
-        </TouchableOpacity>
-        <TextInput
-          placeholder="Search Recipes"
-          placeholderTextColor={colors.darkGrey}
-          keyboardType="email-address"
-          autoCapitalize="none"
-          style={styles.searchTxt}
-        />
-        <TouchableOpacity>
-          <MaterialIcons
-            name="filter-list"
-            size={24}
-            color={colors.darkGrey}
-            style={{ marginRight: wp(27) }}
-          />
-        </TouchableOpacity>
-      </View>
+      <InputText title="Search Recipes" addStyle={{ marginVertical: hp(25) }} />
       <View
         style={{
           flexDirection: "row",
@@ -221,21 +197,5 @@ const styles = StyleSheet.create({
     fontFamily: "Bold",
     fontSize: hp(16),
     color: colors.black,
-  },
-  searchWrap: {
-    flexDirection: "row",
-    height: hp(55),
-    backgroundColor: colors.lightGrey,
-    justifyContent: "center",
-    alignItems: "center",
-    marginVertical: hp(25),
-    borderRadius: wp(10),
-  },
-  searchTxt: {
-    flex: 1,
-    fontFamily: "Regular",
-    fontSize: hp(12),
-    color: colors.black,
-    marginLeft: wp(15),
   },
 });

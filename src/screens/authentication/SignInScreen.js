@@ -6,16 +6,15 @@ import {
   StatusBar,
   Text,
   View,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { Button, InputText } from "../../components";
 import SignInImage from "../../assets/images/signin.jpg";
 
 export default function SignInScreen({ navigation }) {
@@ -67,30 +66,11 @@ export default function SignInScreen({ navigation }) {
             <Text style={styles.title}>Welcome back,</Text>
             <Text style={styles.desc}>sign in to continue</Text>
           </View>
-          <View style={[styles.inputWrap, { marginBottom: hp(15) }]}>
-            <TextInput
-              placeholder="Email Address"
-              placeholderTextColor={colors.darkGrey}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              style={styles.inputTxt}
-            />
-          </View>
-          <View style={[styles.inputWrap, { marginBottom: hp(15) }]}>
-            <TextInput
-              placeholder="Password"
-              placeholderTextColor={colors.darkGrey}
-              secureTextEntry={true}
-              style={styles.inputTxt}
-            />
-            <TouchableOpacity style={{ marginRight: wp(27) }}>
-              <MaterialCommunityIcons
-                name="eye-off"
-                size={24}
-                color={colors.darkGrey}
-              />
-            </TouchableOpacity>
-          </View>
+          <InputText
+            title="Email Address"
+            addStyle={{ marginBottom: hp(15) }}
+          />
+          <InputText title="Password" addStyle={{ marginBottom: hp(15) }} />
           <TouchableOpacity
             onPress={() => navigation.navigate("ForgotPassword")}
           >
@@ -106,12 +86,11 @@ export default function SignInScreen({ navigation }) {
               </Text>
             </Text>
           </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.btn}
-            onPress={() => navigation.navigate("RegisteredUser")}
-          >
-            <Text style={styles.btnText}>Sign In</Text>
-          </TouchableOpacity>
+          <Button
+            title="Sign In"
+            navRoute={() => navigation.navigate("RegisteredUser")}
+            addStyle={{ width: "100%", marginTop: hp(15) }}
+          />
         </View>
       </View>
     </View>
@@ -148,21 +127,6 @@ const styles = StyleSheet.create({
     color: colors.darkGrey,
     marginTop: wp(5),
   },
-  inputWrap: {
-    flexDirection: "row",
-    height: hp(55),
-    backgroundColor: colors.lightGrey,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-  },
-  inputTxt: {
-    flex: 1,
-    fontFamily: "Regular",
-    fontSize: hp(12),
-    color: colors.black,
-    marginLeft: wp(27),
-  },
   forgotPass: {
     alignSelf: "flex-end",
     fontFamily: "Bold",
@@ -173,19 +137,5 @@ const styles = StyleSheet.create({
     fontFamily: "Regular",
     fontSize: hp(12),
     color: colors.darkGrey,
-  },
-  btn: {
-    width: "100%",
-    height: hp(55),
-    backgroundColor: colors.primary,
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: wp(10),
-    marginTop: wp(15),
-  },
-  btnText: {
-    fontFamily: "Bold",
-    fontSize: hp(12),
-    color: colors.white,
   },
 });
