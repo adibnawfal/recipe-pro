@@ -89,46 +89,27 @@ export default function GuestRecipeScreen({ navigation, route }) {
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
           marginTop: hp(15),
         }}
       >
         <View
           style={{
-            height: "100%",
-            flexDirection: "row",
+            width: wp(5),
+            height: wp(5),
+            borderRadius: wp(5) / 2,
+            marginTop: hp(6),
+            backgroundColor: colors.primary,
           }}
-        >
-          <View
-            style={{
-              width: wp(5),
-              height: wp(5),
-              borderRadius: wp(5) / 2,
-              marginTop: hp(6),
-              backgroundColor: colors.primary,
-            }}
-          />
-          <Text
-            style={{
-              fontFamily: "Regular",
-              fontSize: hp(12),
-              color: colors.black,
-              marginLeft: wp(15),
-            }}
-          >
-            {item.txt}
-          </Text>
-        </View>
+        />
         <Text
           style={{
             fontFamily: "Regular",
             fontSize: hp(12),
             color: colors.black,
+            marginLeft: wp(15),
           }}
         >
-          {item.measure}
+          {item.txt}
         </Text>
       </View>
     );

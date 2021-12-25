@@ -10,7 +10,6 @@ import {
   FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
@@ -90,46 +89,27 @@ export default function RecipeScreen({ navigation, route }) {
       <View
         style={{
           flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          width: "100%",
           marginTop: hp(15),
         }}
       >
         <View
           style={{
-            height: "100%",
-            flexDirection: "row",
+            width: wp(5),
+            height: wp(5),
+            borderRadius: wp(5) / 2,
+            marginTop: hp(6),
+            backgroundColor: colors.primary,
           }}
-        >
-          <View
-            style={{
-              width: wp(5),
-              height: wp(5),
-              borderRadius: wp(5) / 2,
-              marginTop: hp(6),
-              backgroundColor: colors.primary,
-            }}
-          />
-          <Text
-            style={{
-              fontFamily: "Regular",
-              fontSize: hp(12),
-              color: colors.black,
-              marginLeft: wp(15),
-            }}
-          >
-            {item.txt}
-          </Text>
-        </View>
+        />
         <Text
           style={{
             fontFamily: "Regular",
             fontSize: hp(12),
             color: colors.black,
+            marginLeft: wp(15),
           }}
         >
-          {item.measure}
+          {item.txt}
         </Text>
       </View>
     );
@@ -194,8 +174,8 @@ export default function RecipeScreen({ navigation, route }) {
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
                   }}
                 >
-                  <MaterialCommunityIcons
-                    name="heart-outline"
+                  <MaterialIcons
+                    name="favorite-outline"
                     size={30}
                     color={colors.white}
                   />

@@ -27,8 +27,13 @@ import {
   AddRecipeScreen,
   FavouriteScreen,
   ProfileScreen,
+  FilterSearchScreen,
   RecipeScreen,
   RecipeListScreen,
+  IngredientScreen,
+  StepScreen,
+  EditProfileScreen,
+  ChangePasswordScreen,
 } from "./src/screens/registered";
 import { colors } from "./src/res/colors";
 import { hp } from "./src/config/dimensions";
@@ -62,7 +67,16 @@ const tabOption = ({ route }) => ({
 
 const tabHide = ({ navigation, route }) => {
   React.useLayoutEffect(() => {
-    const tabHiddenRoutes = ["TrendingRecipe", "Recipe", "RecipeList"];
+    const tabHiddenRoutes = [
+      "FilterSearch",
+      "TrendingRecipe",
+      "Recipe",
+      "RecipeList",
+      "Ingredient",
+      "Step",
+      "EditProfile",
+      "ChangePassword",
+    ];
 
     if (tabHiddenRoutes.includes(getFocusedRouteNameFromRoute(route))) {
       navigation.setOptions({ tabBarStyle: { display: "none" } });
@@ -91,6 +105,11 @@ function HomeNavigator({ navigation, route }) {
         options={stackOption}
       />
       <StackHome.Screen
+        name="FilterSearch"
+        component={FilterSearchScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
         name="Recipe"
         component={RecipeScreen}
         options={stackOption}
@@ -114,6 +133,16 @@ function AddRecipeNavigator({ navigation, route }) {
       <StackAddRecipe.Screen
         name="AddRecipeMain"
         component={AddRecipeScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="Ingredient"
+        component={IngredientScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="Step"
+        component={StepScreen}
         options={stackOption}
       />
     </StackAddRecipe.Navigator>
@@ -161,6 +190,16 @@ function ProfileNavigator({ navigation, route }) {
       <StackHome.Screen
         name="RecipeList"
         component={RecipeListScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="EditProfile"
+        component={EditProfileScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="ChangePassword"
+        component={ChangePasswordScreen}
         options={stackOption}
       />
     </StackProfile.Navigator>

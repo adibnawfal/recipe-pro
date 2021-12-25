@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -9,8 +9,8 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
@@ -25,6 +25,8 @@ export default function FavouriteScreen({ navigation }) {
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
+
+  const [menu, setMenu] = useState(false);
 
   if (!fontsLoaded) {
     return <AppLoading />;
@@ -124,8 +126,8 @@ export default function FavouriteScreen({ navigation }) {
                   <Text>{item.difficulty}</Text>
                 </Text>
                 <TouchableOpacity>
-                  <MaterialCommunityIcons
-                    name="heart-outline"
+                  <MaterialIcons
+                    name="favorite-outline"
                     size={24}
                     color={colors.white}
                   />
@@ -148,15 +150,27 @@ export default function FavouriteScreen({ navigation }) {
       <View style={styles.header}>
         <View style={{ width: wp(38) }} />
         <Text style={styles.headerTxt}>Favourite</Text>
-        <TouchableOpacity
-          style={{
-            width: wp(38),
-            justifyContent: "center",
-            alignItems: "flex-end",
-          }}
+        <Menu
+          visible={menu}
+          style={styles.menuWrap}
+          anchor={
+            <TouchableOpacity
+              style={{
+                width: wp(38),
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+              onPress={() => setMenu(true)}
+            >
+              <MaterialIcons name="more-vert" size={30} color={colors.black} />
+            </TouchableOpacity>
+          }
+          onRequestClose={() => setMenu(false)}
         >
-          <MaterialIcons name="more-vert" size={30} color={colors.black} />
-        </TouchableOpacity>
+          <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
+            Clear Favourite
+          </MenuItem>
+        </Menu>
       </View>
       <InputText title="Search Recipes" addStyle={{ marginVertical: hp(25) }} />
       <View
@@ -207,6 +221,15 @@ const styles = StyleSheet.create({
   headerTxt: {
     fontFamily: "Bold",
     fontSize: hp(16),
+    color: colors.black,
+  },
+  menuWrap: {
+    width: wp(160),
+    backgroundColor: colors.white,
+  },
+  menuTxt: {
+    fontFamily: "SemiBold",
+    fontSize: hp(12),
     color: colors.black,
   },
 });

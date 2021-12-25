@@ -10,22 +10,27 @@ import {
   FlatList,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { Menu, MenuItem } from "react-native-material-menu";
 import { Provider, Dialog, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-import { Button, InputText } from "../../components";
+import { Button, InputText, SectionBreak } from "../../components";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 import { CUISINETYPE_DATA } from "../../data/CUISINETYPE_DATA";
 import { DIFFICULTY_DATA } from "../../data/DIFFICULTY_DATA";
 
-import { SectionBreak } from "../../components";
-
 export default function AddRecipeScreen({ navigation }) {
+  let [fontsLoaded] = useFonts({
+    Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
+    SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
+    Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
+  });
+
+  const [menu, setMenu] = useState(false);
   const [image, setImage] = useState(null);
   const [visibleCategory, setVisibleCategory] = useState(false);
   const [visibleCuisineType, setVisibleCuisineType] = useState(false);
@@ -34,17 +39,10 @@ export default function AddRecipeScreen({ navigation }) {
   const [category, setCategory] = useState(null);
   const [cuisineType, setCuisineType] = useState(null);
   const [time, setTime] = useState(0);
+  const [day, setDay] = useState(0);
+  const [hour, setHour] = useState(0);
+  const [minute, setMinute] = useState(0);
   const [difficulty, setDifficulty] = useState(null);
-
-  let [fontsLoaded] = useFonts({
-    Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
-    SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
-    Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
-  });
-
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -181,24 +179,39 @@ export default function AddRecipeScreen({ navigation }) {
                 }}
               >
                 <View style={{ width: wp(38) }} />
-                <TouchableOpacity
-                  style={{
-                    width: wp(38),
-                    height: wp(38),
-                    borderRadius: wp(38) / 2,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: image
-                      ? "rgba(0, 0, 0, 0.5)"
-                      : "rgba(0, 0, 0, 0.3)",
-                  }}
+                <Menu
+                  visible={menu}
+                  style={styles.menuWrap}
+                  anchor={
+                    <TouchableOpacity
+                      style={{
+                        width: wp(38),
+                        height: wp(38),
+                        borderRadius: wp(38) / 2,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        backgroundColor: image
+                          ? "rgba(0, 0, 0, 0.5)"
+                          : "rgba(0, 0, 0, 0.3)",
+                      }}
+                      onPress={() => setMenu(true)}
+                    >
+                      <MaterialIcons
+                        name="more-vert"
+                        size={30}
+                        color={colors.white}
+                      />
+                    </TouchableOpacity>
+                  }
+                  onRequestClose={() => setMenu(false)}
                 >
-                  <MaterialIcons
-                    name="more-vert"
-                    size={30}
-                    color={colors.white}
-                  />
-                </TouchableOpacity>
+                  <MenuItem
+                    textStyle={styles.menuTxt}
+                    onPress={() => setMenu(false)}
+                  >
+                    Clear Content
+                  </MenuItem>
+                </Menu>
               </View>
               {image ? (
                 <View
@@ -263,7 +276,7 @@ export default function AddRecipeScreen({ navigation }) {
                 marginBottom: hp(15),
               }}
             >
-              Categories
+              Category
             </Text>
             <TouchableOpacity
               style={{
@@ -284,7 +297,7 @@ export default function AddRecipeScreen({ navigation }) {
                   color: category === null ? colors.darkGrey : colors.black,
                 }}
               >
-                {category === null ? "Simple & Quick" : category}
+                {category === null ? "Select Category" : category}
               </Text>
               <MaterialIcons
                 name="expand-more"
@@ -338,7 +351,7 @@ export default function AddRecipeScreen({ navigation }) {
                   color: cuisineType === null ? colors.darkGrey : colors.black,
                 }}
               >
-                {cuisineType === null ? "Malaysian" : cuisineType}
+                {cuisineType === null ? "Select Cuisine Type" : cuisineType}
               </Text>
               <MaterialIcons
                 name="expand-more"
@@ -409,13 +422,220 @@ export default function AddRecipeScreen({ navigation }) {
                   visible={visibleTime}
                   onDismiss={() => setVisibleTime(false)}
                 >
-                  <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
+                  <Dialog.ScrollArea
+                    style={{
+                      paddingHorizontal: 0,
+                      paddingVertical: hp(25),
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                  >
                     {/* <FlatList
-                    data={CUISINETYPE_DATA}
-                    renderItem={({ item }) => renderCuisineType(item)}
-                    keyExtractor={(item) => item.id}
-                    keyboardShouldPersistTaps="always"
-                  /> */}
+                      data={CUISINETYPE_DATA}
+                      renderItem={({ item }) => renderCuisineType(item)}
+                      keyExtractor={(item) => item.id}
+                      keyboardShouldPersistTaps="always"
+                    /> */}
+                    <Text
+                      style={{
+                        fontFamily: "Bold",
+                        fontSize: hp(12),
+                        color: colors.black,
+                        marginBottom: hp(25),
+                      }}
+                    >
+                      Cooking Time
+                    </Text>
+                    <View style={{ flexDirection: "row" }}>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={day === 30 ? null : () => setDay(day + 1)}
+                        >
+                          <MaterialIcons
+                            name="expand-less"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Bold",
+                            fontSize: hp(12),
+                            color: colors.black,
+                            marginVertical: hp(5),
+                          }}
+                        >
+                          {day}
+                        </Text>
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={day === 0 ? null : () => setDay(day - 1)}
+                        >
+                          <MaterialIcons
+                            name="expand-more"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Regular",
+                            fontSize: hp(10),
+                            color: colors.black,
+                            marginTop: hp(5),
+                          }}
+                        >
+                          Days
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                          marginHorizontal: wp(15),
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={hour === 24 ? null : () => setHour(hour + 1)}
+                        >
+                          <MaterialIcons
+                            name="expand-less"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Bold",
+                            fontSize: hp(12),
+                            color: colors.black,
+                            marginVertical: hp(5),
+                          }}
+                        >
+                          {hour}
+                        </Text>
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={hour === 0 ? null : () => setHour(hour - 1)}
+                        >
+                          <MaterialIcons
+                            name="expand-more"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Regular",
+                            fontSize: hp(10),
+                            color: colors.black,
+                            marginTop: hp(5),
+                          }}
+                        >
+                          Hours
+                        </Text>
+                      </View>
+                      <View
+                        style={{
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}
+                      >
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={
+                            minute === 60 ? null : () => setMinute(minute + 1)
+                          }
+                        >
+                          <MaterialIcons
+                            name="expand-less"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Bold",
+                            fontSize: hp(12),
+                            color: colors.black,
+                            marginVertical: hp(5),
+                          }}
+                        >
+                          {minute}
+                        </Text>
+                        <TouchableOpacity
+                          style={{
+                            width: wp(30),
+                            height: wp(30),
+                            justifyContent: "center",
+                            alignItems: "center",
+                            borderRadius: wp(5),
+                            backgroundColor: colors.lightGrey,
+                          }}
+                          onPress={
+                            minute === 0 ? null : () => setMinute(minute - 1)
+                          }
+                        >
+                          <MaterialIcons
+                            name="expand-more"
+                            size={24}
+                            color={colors.darkGrey}
+                          />
+                        </TouchableOpacity>
+                        <Text
+                          style={{
+                            fontFamily: "Regular",
+                            fontSize: hp(10),
+                            color: colors.black,
+                            marginTop: hp(5),
+                          }}
+                        >
+                          Mins
+                        </Text>
+                      </View>
+                    </View>
                   </Dialog.ScrollArea>
                 </Dialog>
               </Portal>
@@ -528,6 +748,11 @@ export default function AddRecipeScreen({ navigation }) {
                 borderRadius: wp(10),
                 backgroundColor: colors.lightGrey,
               }}
+              onPress={() =>
+                navigation.navigate("Ingredient", {
+                  title: "Add Ingredient",
+                })
+              }
             >
               <MaterialIcons name="add" size={30} color={colors.darkGrey} />
             </TouchableOpacity>
@@ -599,6 +824,11 @@ export default function AddRecipeScreen({ navigation }) {
               borderRadius: wp(10),
               backgroundColor: colors.lightGrey,
             }}
+            onPress={() =>
+              navigation.navigate("Step", {
+                title: "Add Step",
+              })
+            }
           >
             <MaterialIcons name="add" size={30} color={colors.darkGrey} />
           </TouchableOpacity>
@@ -611,6 +841,10 @@ export default function AddRecipeScreen({ navigation }) {
       </View>
     );
   };
+
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
 
   return (
     <Provider>
@@ -634,5 +868,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+  },
+  menuWrap: {
+    left: null,
+    right: 0,
+    width: wp(160),
+    marginRight: wp(15),
+    backgroundColor: colors.white,
+  },
+  menuTxt: {
+    fontFamily: "SemiBold",
+    fontSize: hp(12),
+    color: colors.black,
   },
 });

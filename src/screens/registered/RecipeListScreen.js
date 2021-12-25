@@ -10,7 +10,6 @@ import {
   FlatList,
 } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
@@ -125,8 +124,8 @@ export default function RecipeListScreen({ navigation, route }) {
                   <Text>{item.difficulty}</Text>
                 </Text>
                 <TouchableOpacity>
-                  <MaterialCommunityIcons
-                    name="heart-outline"
+                  <MaterialIcons
+                    name="favorite-outline"
                     size={24}
                     color={colors.white}
                   />

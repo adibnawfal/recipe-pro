@@ -8,7 +8,7 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../config/dimensions";
 import { colors } from "../res/colors";
 
-export default function InputText({ title, addStyle }) {
+export default function InputText({ navigation, title, addStyle }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -21,7 +21,7 @@ export default function InputText({ title, addStyle }) {
 
   return (
     <View style={[styles.inputWrap, { ...addStyle }]}>
-      {title === "Search Recipes" ? (
+      {title === "Search Recipes" || title === "Search Ingredients" ? (
         <MaterialIcons
           name="search"
           size={24}
@@ -50,7 +50,7 @@ export default function InputText({ title, addStyle }) {
           </TouchableOpacity>
         ) : null,
         title === "Search Recipes" ? (
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
             <MaterialIcons
               name="filter-list"
               size={24}
