@@ -1,19 +1,26 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLoading from "expo-app-loading";
 import { StyleSheet, View, TouchableOpacity, TextInput } from "react-native";
 import { MaterialIcons } from "@expo/vector-icons";
-import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { useFonts } from "expo-font";
 
 import { wp, hp } from "../config/dimensions";
 import { colors } from "../res/colors";
 
-export default function InputText({ navigation, title, addStyle }) {
+export default function InputText({
+  navigation,
+  title,
+  addStyle,
+  value,
+  onChangeText,
+}) {
   let [fontsLoaded] = useFonts({
     Regular: require("../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../assets/fonts/OpenSans-Bold.ttf"),
   });
+
+  const [secure, setSecure] = useState(true);
 
   if (!fontsLoaded) {
     return <AppLoading />;
@@ -21,7 +28,7 @@ export default function InputText({ navigation, title, addStyle }) {
 
   return (
     <View style={[styles.inputWrap, { ...addStyle }]}>
-      {title === "Search Recipes" || title === "Search Ingredients" ? (
+      {title === "Search Recipe" || title === "Search Ingredient" ? (
         <MaterialIcons
           name="search"
           size={24}
@@ -34,32 +41,34 @@ export default function InputText({ navigation, title, addStyle }) {
         placeholderTextColor={colors.darkGrey}
         keyboardType={title === "Email Address" ? "email-address" : "default"}
         secureTextEntry={
-          title === "Password" || title === "Confirm Password" ? true : false
+          title === "Password" || title === "Confirm Password" ? secure : false
         }
         autoCapitalize="none"
         style={styles.inputTxt}
+        value={value}
+        onChangeText={onChangeText}
       />
-      {
-        (title === "Password" || title === "Confirm Password" ? (
-          <TouchableOpacity style={{ marginRight: wp(27) }}>
-            <MaterialCommunityIcons
-              name="eye-off"
-              size={24}
-              color={colors.darkGrey}
-            />
-          </TouchableOpacity>
-        ) : null,
-        title === "Search Recipes" ? (
-          <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
-            <MaterialIcons
-              name="filter-list"
-              size={24}
-              color={colors.darkGrey}
-              style={{ marginRight: wp(27) }}
-            />
-          </TouchableOpacity>
-        ) : null)
-      }
+      {title === "Password" || title === "Confirm Password" ? (
+        <TouchableOpacity
+          style={{ marginRight: wp(27) }}
+          onPress={() => setSecure(!secure)}
+        >
+          <MaterialIcons
+            name={secure ? "visibility-off" : "visibility"}
+            size={24}
+            color={colors.darkGrey}
+          />
+        </TouchableOpacity>
+      ) : null || title === "Search Recipe" ? (
+        <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
+          <MaterialIcons
+            name="filter-list"
+            size={24}
+            color={colors.darkGrey}
+            style={{ marginRight: wp(27) }}
+          />
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }

@@ -1,4 +1,5 @@
-import React from "react";
+import React, { useState } from "react";
+import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import ImageOverlay from "react-native-image-overlay";
 import {
@@ -7,7 +8,9 @@ import {
   Text,
   View,
   TouchableOpacity,
+  ScrollView,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -24,82 +27,121 @@ export default function SignInScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const [error, setError] = useState(true);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const auth = getAuth();
+
+  const handleSignIn = () => {
+    email != "" || password != ""
+      ? setError(null)
+      : setError("The email address or password you entered is incorrect.");
+
+    if (error != true) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {})
+        .catch((error) => {
+          console.log(error.message);
+        });
+    }
+  };
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <View>
-        <ImageOverlay
-          source={SignInImage}
-          containerStyle={{ aspectRatio: 3000 / 2008 }}
-          contentPosition="top"
-          overlayColor={colors.black}
-          overlayAlpha={0.3}
-        >
-          <SafeAreaView style={{ width: "100%", paddingHorizontal: wp(27) }}>
-            <TouchableOpacity
-              style={{
-                width: wp(38),
-                height: wp(38),
-                borderRadius: wp(38) / 2,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: "rgba(0, 0, 0, 0.5)",
-              }}
-              onPress={() => navigation.pop()}
-            >
-              <MaterialIcons name="arrow-back" size={30} color={colors.white} />
-            </TouchableOpacity>
-          </SafeAreaView>
-        </ImageOverlay>
-      </View>
-      <View style={styles.bodyWrap}>
+    <KeyboardAwareScrollView
+      enableAutomaticScroll
+      style={{ backgroundColor: colors.white }}
+      contentContainerStyle={{ flex: 1 }}
+      keyboardShouldPersistTaps="always"
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        <StatusBar
+          barStyle="light-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
         <View>
-          <View style={{ marginBottom: hp(25) }}>
-            <Text style={styles.title}>Welcome back,</Text>
-            <Text style={styles.desc}>sign in to continue</Text>
-          </View>
-          <InputText
-            title="Email Address"
-            addStyle={{ marginBottom: hp(15) }}
-          />
-          <InputText title="Password" addStyle={{ marginBottom: hp(15) }} />
-          <TouchableOpacity
-            onPress={() => navigation.navigate("ForgotPassword")}
+          <ImageOverlay
+            source={SignInImage}
+            containerStyle={{ aspectRatio: 3000 / 2008 }}
+            contentPosition="top"
+            overlayColor={colors.black}
+            overlayAlpha={0.3}
           >
-            <Text style={styles.forgotPass}>Forgot Password?</Text>
-          </TouchableOpacity>
+            <SafeAreaView style={{ width: "100%", paddingHorizontal: wp(27) }}>
+              <TouchableOpacity
+                style={{
+                  width: wp(38),
+                  height: wp(38),
+                  borderRadius: wp(38) / 2,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: "rgba(0, 0, 0, 0.5)",
+                }}
+                onPress={() => navigation.pop()}
+              >
+                <MaterialIcons
+                  name="arrow-back"
+                  size={30}
+                  color={colors.white}
+                />
+              </TouchableOpacity>
+            </SafeAreaView>
+          </ImageOverlay>
         </View>
-        <View style={{ width: "100%", alignItems: "center" }}>
-          <TouchableOpacity onPress={() => navigation.navigate("Register")}>
-            <Text style={styles.registerTxt}>
-              Don’t have an account?{" "}
-              <Text style={{ fontFamily: "Bold", color: colors.black }}>
-                Register
+        <View style={styles.bodyWrap}>
+          <View>
+            <View style={{ marginBottom: hp(25) }}>
+              <Text style={styles.title}>Welcome back,</Text>
+              <Text style={styles.desc}>sign in to continue</Text>
+            </View>
+            <InputText
+              title="Email Address"
+              addStyle={{ marginBottom: hp(15) }}
+              value={email}
+              onChangeText={(email) => setEmail(email)}
+            />
+            <InputText
+              title="Password"
+              addStyle={{ marginBottom: hp(15) }}
+              value={password}
+              onChangeText={(password) => setPassword(password)}
+            />
+            <TouchableOpacity
+              onPress={() => navigation.navigate("ForgotPassword")}
+            >
+              <Text style={styles.forgotPass}>Forgot Password?</Text>
+            </TouchableOpacity>
+          </View>
+          {error && <Text style={styles.errorTxt}>{error}</Text>}
+          <View style={{ width: "100%", alignItems: "center" }}>
+            <TouchableOpacity onPress={() => navigation.navigate("Register")}>
+              <Text style={styles.registerTxt}>
+                Don’t have an account?{" "}
+                <Text style={{ fontFamily: "Bold", color: colors.black }}>
+                  Register
+                </Text>
               </Text>
-            </Text>
-          </TouchableOpacity>
-          <Button
-            title="Sign In"
-            navRoute={() => navigation.navigate("RegisteredUser")}
-            addStyle={{ width: "100%", marginTop: hp(15) }}
-          />
+            </TouchableOpacity>
+            <Button
+              title="Sign In"
+              addStyle={{ width: "100%", marginTop: hp(15) }}
+              onPress={() => handleSignIn()}
+            />
+          </View>
         </View>
-      </View>
-    </View>
+      </ScrollView>
+    </KeyboardAwareScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     backgroundColor: colors.white,
   },
   overlay: {
@@ -132,6 +174,13 @@ const styles = StyleSheet.create({
     fontFamily: "Bold",
     fontSize: hp(12),
     color: colors.black,
+  },
+  errorTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.red,
+    textAlign: "center",
+    marginVertical: hp(25),
   },
   registerTxt: {
     fontFamily: "Regular",

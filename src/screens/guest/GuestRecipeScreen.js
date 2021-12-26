@@ -25,11 +25,11 @@ export default function GuestRecipeScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const { item } = route.params;
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
-
-  const { item } = route.params;
 
   const renderIngredient = (item) => {
     return (
@@ -112,14 +112,6 @@ export default function GuestRecipeScreen({ navigation, route }) {
           {item.txt}
         </Text>
       </View>
-    );
-  };
-
-  const renderStar = (item) => {
-    return (
-      <TouchableOpacity>
-        <MaterialIcons name="star-outline" size={30} color={colors.darkGrey} />
-      </TouchableOpacity>
     );
   };
 
@@ -375,29 +367,6 @@ export default function GuestRecipeScreen({ navigation, route }) {
           keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="always"
         />
-        {/* <SectionBreak />
-        <Text
-          style={{
-            fontFamily: "Bold",
-            fontSize: hp(12),
-            color: colors.black,
-          }}
-        >
-          Rate this recipe
-        </Text>
-        <FlatList
-          horizontal
-          data={item.star}
-          renderItem={({ item }) => renderStar(item)}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="always"
-          contentContainerStyle={{
-            width: "100%",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginTop: hp(15),
-          }}
-        /> */}
       </View>
     );
   };

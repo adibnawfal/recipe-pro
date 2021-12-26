@@ -28,7 +28,7 @@ export default function RecipeListScreen({ navigation, route }) {
     return <AppLoading />;
   }
 
-  const { title, RECIPE_DATA } = route.params;
+  const { title, recipeData } = route.params;
 
   const renderRecipe = (item) => {
     return (
@@ -158,7 +158,7 @@ export default function RecipeListScreen({ navigation, route }) {
         <Text style={styles.headerTxt}>{title}</Text>
         <View style={{ width: wp(38) }} />
       </View>
-      <InputText title="Search Recipes" addStyle={{ marginVertical: hp(25) }} />
+      <InputText title="Search Recipe" addStyle={{ marginVertical: hp(25) }} />
       <View
         style={{
           flexDirection: "row",
@@ -179,11 +179,11 @@ export default function RecipeListScreen({ navigation, route }) {
             color: colors.darkGrey,
           }}
         >
-          {RECIPE_DATA.length} Recipes
+          {recipeData.length} Recipes
         </Text>
       </View>
       <FlatList
-        data={RECIPE_DATA}
+        data={recipeData}
         renderItem={({ item }) => renderRecipe(item)}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="always"

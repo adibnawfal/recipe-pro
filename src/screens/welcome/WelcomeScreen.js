@@ -60,18 +60,18 @@ export default function WelcomeScreen({ navigation }) {
               </Text>
               <Button
                 title="Sign In"
-                navRoute={() => navigation.navigate("SignIn")}
                 addStyle={{ marginTop: hp(15) }}
+                onPress={() => navigation.navigate("SignIn")}
               />
               <Button
                 title="Guest"
-                navRoute={() => navigation.navigate("GuestUser")}
                 addStyle={{
                   backgroundColor: "transparent",
                   borderWidth: wp(2),
                   borderColor: colors.primary,
                   marginTop: hp(15),
                 }}
+                onPress={() => navigation.navigate("GuestUser")}
               />
             </View>
           </SafeAreaView>

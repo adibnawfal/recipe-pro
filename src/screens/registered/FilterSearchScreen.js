@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useState } from "react";
 import AppLoading from "expo-app-loading";
 import {
   StyleSheet,
@@ -8,7 +8,8 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import RangeSlider, { Slider } from "react-native-range-slider-expo";
+import Slider from "@react-native-community/slider";
+import RangeSlider from "react-native-range-slider-expo";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -30,9 +31,10 @@ export default function FilterSearchScreen({ navigation }) {
   const [cuisineType, setCuisineType] = useState(false);
   const [include, setInclude] = useState(true);
   const [exclude, setExclude] = useState(false);
+  const [toRating, setToRating] = useState(5);
+
   const [fromValue, setFromValue] = useState(0);
-  const [toValue, setToValue] = useState(0);
-  const [value, setValue] = useState(0);
+  const [toValue, setToValue] = useState(5);
 
   const renderCategory = (item) => {
     return (
@@ -101,7 +103,7 @@ export default function FilterSearchScreen({ navigation }) {
         <View style={styles.header}>
           <TouchableOpacity
             style={{
-              width: wp(38),
+              width: wp(50),
               justifyContent: "center",
             }}
             onPress={() => navigation.pop()}
@@ -111,7 +113,7 @@ export default function FilterSearchScreen({ navigation }) {
           <Text style={styles.headerTxt}>Filter</Text>
           <TouchableOpacity
             style={{
-              width: wp(38),
+              width: wp(50),
               justifyContent: "center",
               alignItems: "flex-end",
             }}
@@ -166,7 +168,7 @@ export default function FilterSearchScreen({ navigation }) {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginVertical: hp(15),
+            marginTop: hp(15),
           }}
         >
           <Text
@@ -188,26 +190,42 @@ export default function FilterSearchScreen({ navigation }) {
             {fromValue} - {toValue}
           </Text>
         </View>
-        <RangeSlider
-          min={0}
-          max={5}
-          fromValueOnChange={(value) => setFromValue(value)}
-          toValueOnChange={(value) => setToValue(value)}
+        <View>
+          <RangeSlider
+            min={0}
+            max={5}
+            step={0.1}
+            fromValueOnChange={useCallback((value) => setFromValue(value), [])}
+            toValueOnChange={(value) => setToValue(value)}
+            styleSize="small"
+            fromKnobColor={colors.primary}
+            toKnobColor={colors.primary}
+            inRangeBarColor={colors.primary}
+            outOfRangeBarColor={colors.darkGrey}
+            valueLabelsTextColor={colors.white}
+            valueLabelsBackgroundColor={colors.primary}
+            rangeLabelsTextColor={colors.darkGrey}
+            initialFromValue={fromValue}
+            initialToValue={toValue}
+          />
+        </View>
+
+        {/* <Slider
+          style={{ height: hp(35) }}
+          minimumValue={0}
+          maximumValue={5}
           step={0.1}
-          styleSize="small"
-          fromKnobColor={colors.primary}
-          toKnobColor={colors.primary}
-          inRangeBarColor={colors.primary}
-          outOfRangeBarColor={colors.darkGrey}
-          showRangeLabels={false}
-          showValueLabels={false}
-        />
+          value={toRating}
+          minimumTrackTintColor={colors.primary}
+          maximumTrackTintColor={colors.darkGrey}
+          onSlidingComplete={(value) => setToRating(value)}
+        /> */}
         <View
           style={{
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginVertical: hp(15),
+            marginBottom: hp(15),
           }}
         >
           <Text
@@ -322,7 +340,7 @@ export default function FilterSearchScreen({ navigation }) {
           </TouchableOpacity>
         </View>
         <InputText
-          title="Search Ingredients"
+          title="Search Ingredient"
           addStyle={{ marginVertical: hp(15) }}
         />
         <Button

@@ -6,7 +6,7 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../config/dimensions";
 import { colors } from "../res/colors";
 
-export default function Button({ title, navRoute, addStyle }) {
+export default function Button({ title, addStyle, onPress }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -18,10 +18,7 @@ export default function Button({ title, navRoute, addStyle }) {
   }
 
   return (
-    <TouchableOpacity
-      style={[styles.btn, { ...addStyle }]}
-      onPress={() => navRoute()}
-    >
+    <TouchableOpacity style={[styles.btn, { ...addStyle }]} onPress={onPress}>
       <Text style={styles.btnText}>{title}</Text>
     </TouchableOpacity>
   );

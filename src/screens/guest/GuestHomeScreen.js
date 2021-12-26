@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -116,6 +117,8 @@ export default function GuestHomeScreen({ navigation }) {
   };
 
   const renderCategory = (item) => {
+    let categoryData = _.filter(RECIPE_DATA, { category: item.title });
+
     return (
       <TouchableOpacity
         style={{
@@ -124,6 +127,12 @@ export default function GuestHomeScreen({ navigation }) {
           marginHorizontal: wp(27),
           backgroundColor: colors.lightGrey,
         }}
+        onPress={() =>
+          navigation.navigate("GuestRecipeList", {
+            title: item.title,
+            recipeData: categoryData,
+          })
+        }
       >
         <ImageBackground
           source={item.image}
@@ -156,6 +165,10 @@ export default function GuestHomeScreen({ navigation }) {
   };
 
   const renderHeader = () => {
+    let trendingData = _.filter(RECIPE_DATA, (item) => {
+      return item.rating > 4.5;
+    });
+
     return (
       <View
         style={{
@@ -193,7 +206,10 @@ export default function GuestHomeScreen({ navigation }) {
                 alignItems: "center",
               }}
               onPress={() =>
-                navigation.navigate("GuestTrendingRecipe", { RECIPE_DATA })
+                navigation.navigate("GuestRecipeList", {
+                  title: "Trending Recipe",
+                  recipeData: trendingData,
+                })
               }
             >
               <Text
@@ -214,7 +230,7 @@ export default function GuestHomeScreen({ navigation }) {
           </View>
           <FlatList
             horizontal
-            data={RECIPE_DATA}
+            data={trendingData}
             renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"

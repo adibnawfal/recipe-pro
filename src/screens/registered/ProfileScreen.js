@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getAuth, signOut } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -26,6 +27,16 @@ export default function ProfileScreen({ navigation }) {
   });
 
   const [menu, setMenu] = useState(false);
+
+  const auth = getAuth();
+
+  const handleSignOut = () => {
+    signOut(auth)
+      .then()
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   if (!fontsLoaded) {
     return <AppLoading />;
@@ -160,7 +171,7 @@ export default function ProfileScreen({ navigation }) {
               textStyle={styles.menuTxt}
               onPress={() => {
                 setMenu(false);
-                navigation.navigate("SignIn");
+                handleSignOut();
               }}
             >
               Sign Out
@@ -252,7 +263,7 @@ export default function ProfileScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("RecipeList", {
                   title: "My Recipe",
-                  RECIPE_DATA,
+                  recipeData: RECIPE_DATA,
                 })
               }
             >

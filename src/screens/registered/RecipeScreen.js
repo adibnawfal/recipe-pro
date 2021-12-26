@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -25,11 +26,12 @@ export default function RecipeScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const { item } = route.params;
+  const [menu, setMenu] = useState(false);
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
-
-  const { item } = route.params;
 
   const renderIngredient = (item) => {
     return (
@@ -180,23 +182,57 @@ export default function RecipeScreen({ navigation, route }) {
                     color={colors.white}
                   />
                 </TouchableOpacity>
-                <TouchableOpacity
-                  style={{
-                    width: wp(38),
-                    height: wp(38),
-                    borderRadius: wp(38) / 2,
-                    justifyContent: "center",
-                    alignItems: "center",
-                    marginLeft: wp(15),
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                  }}
+
+                <Menu
+                  visible={menu}
+                  style={styles.menuWrap}
+                  anchor={
+                    <TouchableOpacity
+                      style={{
+                        width: wp(38),
+                        height: wp(38),
+                        borderRadius: wp(38) / 2,
+                        justifyContent: "center",
+                        alignItems: "center",
+                        marginLeft: wp(15),
+                        backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      }}
+                      onPress={() => setMenu(true)}
+                    >
+                      <MaterialIcons
+                        name="more-vert"
+                        size={30}
+                        color={colors.white}
+                      />
+                    </TouchableOpacity>
+                  }
+                  onRequestClose={() => setMenu(false)}
                 >
-                  <MaterialIcons
-                    name="more-vert"
-                    size={30}
-                    color={colors.white}
-                  />
-                </TouchableOpacity>
+                  <MenuItem
+                    textStyle={styles.menuTxt}
+                    onPress={() => {
+                      setMenu(false);
+                    }}
+                  >
+                    Share
+                  </MenuItem>
+                  <MenuItem
+                    textStyle={styles.menuTxt}
+                    onPress={() => {
+                      setMenu(false);
+                    }}
+                  >
+                    Edit Recipe
+                  </MenuItem>
+                  <MenuItem
+                    textStyle={styles.menuTxt}
+                    onPress={() => {
+                      setMenu(false);
+                    }}
+                  >
+                    Delete Recipe
+                  </MenuItem>
+                </Menu>
               </View>
             </View>
           </SafeAreaView>
@@ -447,5 +483,17 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.white,
+  },
+  menuWrap: {
+    left: null,
+    right: 0,
+    width: wp(160),
+    marginRight: wp(15),
+    backgroundColor: colors.white,
+  },
+  menuTxt: {
+    fontFamily: "SemiBold",
+    fontSize: hp(12),
+    color: colors.black,
   },
 });

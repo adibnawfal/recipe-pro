@@ -7,6 +7,7 @@ import {
   Text,
   TouchableOpacity,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -27,29 +28,36 @@ export default function ForgotPasswordScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <View>
-        <TouchableOpacity
-          style={{ width: wp(38), justifyContent: "center" }}
-          onPress={() => navigation.pop()}
-        >
-          <MaterialIcons name="arrow-back" size={30} color={colors.black} />
-        </TouchableOpacity>
-        <View style={{ marginVertical: hp(25) }}>
-          <Text style={styles.title}>Forgot password,</Text>
-          <Text style={styles.desc}>
-            enter the email address associated with your account
-          </Text>
+    <KeyboardAwareScrollView
+      enableAutomaticScroll
+      style={{ backgroundColor: colors.white }}
+      contentContainerStyle={{ flex: 1 }}
+      keyboardShouldPersistTaps="always"
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <View>
+          <TouchableOpacity
+            style={{ width: wp(38), justifyContent: "center" }}
+            onPress={() => navigation.pop()}
+          >
+            <MaterialIcons name="arrow-back" size={30} color={colors.black} />
+          </TouchableOpacity>
+          <View style={{ marginVertical: hp(25) }}>
+            <Text style={styles.title}>Forgot password,</Text>
+            <Text style={styles.desc}>
+              enter the email address associated with your account
+            </Text>
+          </View>
+          <InputText title="Email Address" />
         </View>
-        <InputText title="Email Address" />
-      </View>
-      <Button title="Reset Password" navRoute={() => null} />
-    </SafeAreaView>
+        <Button title="Reset Password" navRoute={() => null} />
+      </SafeAreaView>
+    </KeyboardAwareScrollView>
   );
 }
 

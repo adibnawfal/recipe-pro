@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -129,6 +130,8 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderCategory = (item) => {
+    let categoryData = _.filter(RECIPE_DATA, { category: item.title });
+
     return (
       <TouchableOpacity
         style={{
@@ -140,7 +143,7 @@ export default function HomeScreen({ navigation }) {
         onPress={() =>
           navigation.navigate("RecipeList", {
             title: item.title,
-            RECIPE_DATA,
+            recipeData: categoryData,
           })
         }
       >
@@ -175,6 +178,10 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderHeader = () => {
+    let trendingData = _.filter(RECIPE_DATA, (item) => {
+      return item.rating > 4.5;
+    });
+
     return (
       <View
         style={{
@@ -220,7 +227,7 @@ export default function HomeScreen({ navigation }) {
             </ImageBackground>
           </TouchableOpacity>
         </View>
-        <InputText navigation={navigation} title="Search Recipes" />
+        <InputText navigation={navigation} title="Search Recipe" />
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{
@@ -241,7 +248,7 @@ export default function HomeScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("RecipeList", {
                   title: "Trending Recipe",
-                  RECIPE_DATA,
+                  recipeData: trendingData,
                 })
               }
             >
@@ -263,7 +270,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <FlatList
             horizontal
-            data={RECIPE_DATA}
+            data={trendingData}
             renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"

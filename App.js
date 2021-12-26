@@ -1,5 +1,6 @@
 import React from "react";
 import AppLoading from "expo-app-loading";
+import { LogBox } from "react-native";
 import { MaterialCommunityIcons } from "@expo/vector-icons";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import {
@@ -13,6 +14,7 @@ import { useFonts } from "expo-font";
 
 import { WelcomeScreen } from "./src/screens/welcome";
 import {
+  AuthenticationScreen,
   SignInScreen,
   RegisterScreen,
   ForgotPasswordScreen,
@@ -21,6 +23,7 @@ import {
   GuestHomeScreen,
   GuestTrendingRecipeScreen,
   GuestRecipeScreen,
+  GuestRecipeListScreen,
 } from "./src/screens/guest";
 import {
   HomeScreen,
@@ -38,10 +41,18 @@ import {
 import { colors } from "./src/res/colors";
 import { hp } from "./src/config/dimensions";
 
+LogBox.ignoreAllLogs();
+
 enableScreens();
 
 const stackOption = () => ({
   headerShown: false,
+  safeAreaInsets: {
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
 });
 
 const tabOption = ({ route }) => ({
@@ -63,6 +74,12 @@ const tabOption = ({ route }) => ({
   },
   tabBarActiveTintColor: colors.primary,
   tabBarInactiveTintColor: colors.darkGrey,
+  safeAreaInsets: {
+    top: 0,
+    bottom: 0,
+    left: 0,
+    right: 0,
+  },
 });
 
 const tabHide = ({ navigation, route }) => {
@@ -255,6 +272,11 @@ function GuestUserNavigator() {
         component={GuestRecipeScreen}
         options={stackOption}
       />
+      <StackGuest.Screen
+        name="GuestRecipeList"
+        component={GuestRecipeListScreen}
+        options={stackOption}
+      />
     </StackGuest.Navigator>
   );
 }
@@ -275,7 +297,12 @@ export default function App() {
   return (
     <SafeAreaProvider>
       <NavigationContainer>
-        <StackApp.Navigator initialRouteName="Welcome">
+        <StackApp.Navigator initialRouteName="Authentication">
+          <StackApp.Screen
+            name="Authentication"
+            component={AuthenticationScreen}
+            options={stackOption}
+          />
           <StackApp.Screen
             name="Welcome"
             component={WelcomeScreen}

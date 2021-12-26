@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -17,20 +16,19 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { InputText } from "../../components";
-import { RECIPE_DATA } from "../../data/RECIPE_DATA";
 
-export default function FavouriteScreen({ navigation }) {
+export default function GuestRecipeListScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const [menu, setMenu] = useState(false);
-
   if (!fontsLoaded) {
     return <AppLoading />;
   }
+
+  const { title, recipeData } = route.params;
 
   const renderRecipe = (item) => {
     return (
@@ -41,7 +39,7 @@ export default function FavouriteScreen({ navigation }) {
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("Recipe", { item })}
+        onPress={() => navigation.navigate("GuestRecipe", { item })}
       >
         <ImageBackground
           source={item.image}
@@ -148,31 +146,19 @@ export default function FavouriteScreen({ navigation }) {
         translucent={true}
       />
       <View style={styles.header}>
-        <View style={{ width: wp(38) }} />
-        <Text style={styles.headerTxt}>Favourite</Text>
-        <Menu
-          visible={menu}
-          style={styles.menuWrap}
-          anchor={
-            <TouchableOpacity
-              style={{
-                width: wp(38),
-                justifyContent: "center",
-                alignItems: "flex-end",
-              }}
-              onPress={() => setMenu(true)}
-            >
-              <MaterialIcons name="more-vert" size={30} color={colors.black} />
-            </TouchableOpacity>
-          }
-          onRequestClose={() => setMenu(false)}
+        <TouchableOpacity
+          style={{
+            width: wp(38),
+            justifyContent: "center",
+          }}
+          onPress={() => navigation.pop()}
         >
-          <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
-            Clear Favourite
-          </MenuItem>
-        </Menu>
+          <MaterialIcons name="arrow-back" size={30} color={colors.black} />
+        </TouchableOpacity>
+        <Text style={styles.headerTxt}>{title}</Text>
+        <View style={{ width: wp(38) }} />
       </View>
-      <InputText title="Search Recipe" addStyle={{ marginVertical: hp(25) }} />
+      <InputText title="Search Recipes" addStyle={{ marginVertical: hp(25) }} />
       <View
         style={{
           flexDirection: "row",
@@ -193,11 +179,11 @@ export default function FavouriteScreen({ navigation }) {
             color: colors.darkGrey,
           }}
         >
-          {RECIPE_DATA.length} Recipes
+          {recipeData.length} Recipes
         </Text>
       </View>
       <FlatList
-        data={RECIPE_DATA}
+        data={recipeData}
         renderItem={({ item }) => renderRecipe(item)}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="always"
@@ -211,6 +197,7 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingHorizontal: wp(27),
     paddingTop: hp(10),
+    paddingBottom: hp(25),
     backgroundColor: colors.white,
   },
   header: {
@@ -221,15 +208,6 @@ const styles = StyleSheet.create({
   headerTxt: {
     fontFamily: "Bold",
     fontSize: hp(16),
-    color: colors.black,
-  },
-  menuWrap: {
-    width: wp(160),
-    backgroundColor: colors.white,
-  },
-  menuTxt: {
-    fontFamily: "SemiBold",
-    fontSize: hp(12),
     color: colors.black,
   },
 });
