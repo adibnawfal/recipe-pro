@@ -29,6 +29,7 @@ export default function SignInScreen({ navigation }) {
 
   const [error, setError] = useState(true);
   const [email, setEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
 
   const auth = getAuth();
@@ -38,7 +39,9 @@ export default function SignInScreen({ navigation }) {
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {})
         .catch(() => {
-          setError("The email address or password you entered is incorrect.");
+          setEmailError(
+            "The email address or password you entered is incorrect."
+          );
         });
     }
   }, [error]);
@@ -46,7 +49,10 @@ export default function SignInScreen({ navigation }) {
   const handleSignIn = () => {
     email != "" || password != ""
       ? setError(null)
-      : setError("The email address or password you entered is incorrect.");
+      : (setEmailError(
+          "The email address or password you entered is incorrect."
+        ),
+        setError(true));
   };
 
   if (!fontsLoaded) {
@@ -119,7 +125,7 @@ export default function SignInScreen({ navigation }) {
               <Text style={styles.forgotPass}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
-          {error && <Text style={styles.errorTxt}>{error}</Text>}
+          {error && <Text style={styles.errorTxt}>{emailError}</Text>}
           <View style={{ width: "100%", alignItems: "center" }}>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
               <Text style={styles.registerTxt}>

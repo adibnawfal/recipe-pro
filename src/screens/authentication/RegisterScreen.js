@@ -64,12 +64,18 @@ export default function RegisterScreen({ navigation }) {
                 fullName: fullName,
                 profilePicture: null,
               });
+              Keyboard.dismiss();
               setRegistrationVisible(true);
             } catch (error) {
-              console.log(error);
+              Keyboard.dismiss();
+              setSignUpError(
+                "Invalid email address and password or email address is already in use."
+              );
+              setRegistrationVisible(true);
             }
           })
           .catch(() => {
+            Keyboard.dismiss();
             setSignUpError(
               "Invalid email address and password or email address is already in use."
             );
@@ -92,10 +98,7 @@ export default function RegisterScreen({ navigation }) {
 
     password != ""
       ? (setPasswordError(null), setError(false))
-      : (setPasswordError(
-          "Password must be 8-16 characters and contain both numbers and letters/special characters."
-        ),
-        setError(true));
+      : (setPasswordError("Password must be 8-16 characters."), setError(true));
 
     confirmPassword === password && confirmPassword != ""
       ? (setConfirmPasswordError(null), setError(false))
