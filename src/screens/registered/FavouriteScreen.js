@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -27,10 +28,22 @@ export default function FavouriteScreen({ navigation }) {
   });
 
   const [menu, setMenu] = useState(false);
+  const [data, setData] = useState(RECIPE_DATA);
+  const [dataHolder, setDataHolder] = useState(RECIPE_DATA);
 
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
+  const searchFilter = (text) => {
+    const filterData = dataHolder.filter((item) => {
+      let itemData = "";
+
+      itemData = `${item.title.toUpperCase()}`;
+
+      const textData = text.toUpperCase();
+
+      return itemData.indexOf(textData) > -1;
+    });
+
+    setData(filterData);
+  };
 
   const renderRecipe = (item) => {
     return (
@@ -140,69 +153,92 @@ export default function FavouriteScreen({ navigation }) {
     );
   };
 
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <View style={styles.header}>
-        <View style={{ width: wp(38) }} />
-        <Text style={styles.headerTxt}>Favourite</Text>
-        <Menu
-          visible={menu}
-          style={styles.menuWrap}
-          anchor={
-            <TouchableOpacity
-              style={{
-                width: wp(38),
-                justifyContent: "center",
-                alignItems: "flex-end",
-              }}
-              onPress={() => setMenu(true)}
-            >
-              <MaterialIcons name="more-vert" size={30} color={colors.black} />
-            </TouchableOpacity>
-          }
-          onRequestClose={() => setMenu(false)}
-        >
-          <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
-            Clear Favourite
-          </MenuItem>
-        </Menu>
-      </View>
-      <InputText title="Search Recipe" addStyle={{ marginVertical: hp(25) }} />
-      <View
-        style={{
-          flexDirection: "row",
-          justifyContent: "space-between",
-          alignItems: "center",
-          marginBottom: hp(15),
-        }}
-      >
-        <Text
-          style={{ fontFamily: "Bold", fontSize: hp(12), color: colors.black }}
-        >
-          Result
-        </Text>
-        <Text
+    <KeyboardAwareScrollView
+      enableAutomaticScroll
+      style={{ backgroundColor: colors.white }}
+      contentContainerStyle={{ flex: 1 }}
+      keyboardShouldPersistTaps="always"
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <View style={styles.header}>
+          <View style={{ width: wp(38) }} />
+          <Text style={styles.headerTxt}>Favourite</Text>
+          <Menu
+            visible={menu}
+            style={styles.menuWrap}
+            anchor={
+              <TouchableOpacity
+                style={{
+                  width: wp(38),
+                  justifyContent: "center",
+                  alignItems: "flex-end",
+                }}
+                onPress={() => setMenu(true)}
+              >
+                <MaterialIcons
+                  name="more-vert"
+                  size={30}
+                  color={colors.black}
+                />
+              </TouchableOpacity>
+            }
+            onRequestClose={() => setMenu(false)}
+          >
+            <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
+              Clear Favourite
+            </MenuItem>
+          </Menu>
+        </View>
+        <InputText
+          title="Search Recipe"
+          addStyle={{ marginVertical: hp(25) }}
+          onChangeText={(text) => searchFilter(text)}
+        />
+        <View
           style={{
-            fontFamily: "Bold",
-            fontSize: hp(12),
-            color: colors.darkGrey,
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: hp(15),
           }}
         >
-          {RECIPE_DATA.length} Recipes
-        </Text>
-      </View>
-      <FlatList
-        data={RECIPE_DATA}
-        renderItem={({ item }) => renderRecipe(item)}
-        keyExtractor={(item) => item.id}
-        keyboardShouldPersistTaps="always"
-      />
-    </SafeAreaView>
+          <Text
+            style={{
+              fontFamily: "Bold",
+              fontSize: hp(12),
+              color: colors.black,
+            }}
+          >
+            Result
+          </Text>
+          <Text
+            style={{
+              fontFamily: "Bold",
+              fontSize: hp(12),
+              color: colors.darkGrey,
+            }}
+          >
+            {data.length} Recipes
+          </Text>
+        </View>
+        <FlatList
+          data={data}
+          renderItem={({ item }) => renderRecipe(item)}
+          keyExtractor={(item) => item.id}
+          keyboardShouldPersistTaps="always"
+        />
+      </SafeAreaView>
+    </KeyboardAwareScrollView>
   );
 }
 

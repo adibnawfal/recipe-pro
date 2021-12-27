@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLoading from "expo-app-loading";
 import _ from "lodash";
 import {
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -27,9 +28,131 @@ export default function HomeScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
+  const [filter, setFilter] = useState(false);
+  const [data, setData] = useState(RECIPE_DATA);
+  const [dataHolder, setDataHolder] = useState(RECIPE_DATA);
+
+  const searchFilter = (text) => {
+    const filterData = dataHolder.filter((item) => {
+      let itemData = "";
+
+      itemData = `${item.title.toUpperCase()}`;
+
+      const textData = text.toUpperCase();
+
+      return itemData.indexOf(textData) > -1;
+    });
+
+    setData(filterData);
+  };
+
+  const renderSearch = (item) => {
+    return (
+      <TouchableOpacity
+        style={{
+          height: hp(89),
+          borderRadius: wp(10),
+          marginBottom: hp(15),
+          backgroundColor: colors.lightGrey,
+        }}
+        onPress={() => navigation.navigate("Recipe", { item })}
+      >
+        <ImageBackground
+          source={item.image}
+          resizeMode="cover"
+          style={{ flex: 1 }}
+          imageStyle={{ borderRadius: wp(10) }}
+        >
+          <View
+            style={{
+              flex: 1,
+              justifyContent: "space-between",
+              paddingHorizontal: wp(15),
+              paddingVertical: hp(15),
+              backgroundColor: "rgba(0, 0, 0, 0.3)",
+              borderRadius: wp(10),
+            }}
+          >
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                alignItems: "flex-start",
+              }}
+            >
+              <Text
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={{
+                  width: wp(200),
+                  fontFamily: "Bold",
+                  fontSize: hp(12),
+                  color: colors.white,
+                  marginBottom: hp(5),
+                }}
+              >
+                {item.title}
+              </Text>
+              <View>
+                <View
+                  style={{
+                    width: wp(54),
+                    height: hp(24),
+                    flexDirection: "row",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    backgroundColor: "rgba(0, 0, 0, 0.3)",
+                    borderRadius: wp(54) / 2,
+                    alignSelf: "flex-end",
+                  }}
+                >
+                  <MaterialIcons name="star" size={14} color={colors.yellow} />
+                  <Text
+                    style={{
+                      fontFamily: "Bold",
+                      fontSize: hp(10),
+                      color: colors.white,
+                      marginLeft: wp(5),
+                    }}
+                  >
+                    {item.rating}
+                  </Text>
+                </View>
+              </View>
+            </View>
+            <View>
+              <View
+                style={{
+                  flexDirection: "row",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                }}
+              >
+                <Text
+                  style={{
+                    fontFamily: "SemiBold",
+                    fontSize: hp(10),
+                    color: colors.white,
+                  }}
+                >
+                  <Text>{item.time}</Text>
+                  <Text> | </Text>
+                  <Text>{item.difficulty}</Text>
+                </Text>
+                <TouchableOpacity>
+                  <MaterialIcons
+                    name="favorite-outline"
+                    size={24}
+                    color={colors.white}
+                  />
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </ImageBackground>
+      </TouchableOpacity>
+    );
+  };
 
   const renderRecipe = (item) => {
     return (
@@ -227,7 +350,11 @@ export default function HomeScreen({ navigation }) {
             </ImageBackground>
           </TouchableOpacity>
         </View>
-        <InputText navigation={navigation} title="Search Recipe" />
+        <InputText
+          navigation={navigation}
+          title="Search Recipe"
+          onChangeText={(text) => searchFilter(text)}
+        />
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{
@@ -268,15 +395,26 @@ export default function HomeScreen({ navigation }) {
               />
             </TouchableOpacity>
           </View>
+          {/* <FlatList
+              data={data}
+              renderItem={({ item }) => renderSearch(item)}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="always"
+            /> */}
           <FlatList
-            horizontal
-            data={trendingData}
-            renderItem={({ item }) => renderRecipe(item)}
+            horizontal={filter ? true : false}
+            data={filter ? trendingData : data}
+            renderItem={
+              filter
+                ? ({ item }) => renderRecipe(item)
+                : ({ item }) => renderSearch(item)
+            }
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
             style={styles.cardWrap}
           />
         </View>
+
         <View>
           <Text style={[styles.title, { fontSize: hp(12) }]}>Categories</Text>
         </View>
@@ -284,21 +422,32 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
+
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <FlatList
-        data={CATEGORY_DATA}
-        renderItem={({ item }) => renderCategory(item)}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
-        keyboardShouldPersistTaps="always"
-      />
-    </SafeAreaView>
+    <KeyboardAwareScrollView
+      enableAutomaticScroll
+      style={{ backgroundColor: colors.white }}
+      contentContainerStyle={{ flex: 1 }}
+      keyboardShouldPersistTaps="always"
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <FlatList
+          data={CATEGORY_DATA}
+          renderItem={({ item }) => renderCategory(item)}
+          keyExtractor={(item) => item.id}
+          ListHeaderComponent={renderHeader}
+          keyboardShouldPersistTaps="always"
+        />
+      </SafeAreaView>
+    </KeyboardAwareScrollView>
   );
 }
 

@@ -9,6 +9,7 @@ import {
   TouchableOpacity,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -46,115 +47,122 @@ export default function EditProfileScreen({ navigation }) {
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <View style={{ alignItems: "center" }}>
-        <View style={styles.header}>
+    <KeyboardAwareScrollView
+      enableAutomaticScroll
+      style={{ backgroundColor: colors.white }}
+      contentContainerStyle={{ flex: 1 }}
+      keyboardShouldPersistTaps="always"
+    >
+      <SafeAreaView style={styles.container}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <View style={{ alignItems: "center" }}>
+          <View style={styles.header}>
+            <TouchableOpacity
+              style={{
+                width: wp(38),
+                justifyContent: "center",
+              }}
+              onPress={() => navigation.pop()}
+            >
+              <MaterialIcons name="arrow-back" size={30} color={colors.black} />
+            </TouchableOpacity>
+            <Text style={styles.headerTxt}>Edit Profile</Text>
+            <View style={{ width: wp(38) }} />
+          </View>
           <TouchableOpacity
             style={{
-              width: wp(38),
+              width: wp(125),
+              height: wp(125),
+              borderRadius: wp(125) / 2,
+              marginVertical: hp(25),
               justifyContent: "center",
+              alignItems: "center",
+              backgroundColor: colors.lightGrey,
             }}
-            onPress={() => navigation.pop()}
+            onPress={() => pickImage()}
           >
-            <MaterialIcons name="arrow-back" size={30} color={colors.black} />
-          </TouchableOpacity>
-          <Text style={styles.headerTxt}>Edit Profile</Text>
-          <View style={{ width: wp(38) }} />
-        </View>
-        <TouchableOpacity
-          style={{
-            width: wp(125),
-            height: wp(125),
-            borderRadius: wp(125) / 2,
-            marginVertical: hp(25),
-            justifyContent: "center",
-            alignItems: "center",
-            backgroundColor: colors.lightGrey,
-          }}
-          onPress={() => pickImage()}
-        >
-          <ImageBackground
-            source={{ uri: image }}
-            resizeMode="cover"
-            style={{ flex: 1 }}
-            imageStyle={{ borderRadius: wp(125) }}
-          >
-            <View
-              style={{
-                flex: 1,
-                width: wp(125),
-                height: wp(125),
-                borderRadius: wp(125) / 2,
-                justifyContent: "center",
-                alignItems: "center",
-                backgroundColor: image ? "rgba(0, 0, 0, 0.3)" : null,
-              }}
+            <ImageBackground
+              source={{ uri: image }}
+              resizeMode="cover"
+              style={{ flex: 1 }}
+              imageStyle={{ borderRadius: wp(125) }}
             >
-              {image ? (
-                <View
-                  style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    borderRadius: wp(29) / 2,
-                  }}
-                >
+              <View
+                style={{
+                  flex: 1,
+                  width: wp(125),
+                  height: wp(125),
+                  borderRadius: wp(125) / 2,
+                  justifyContent: "center",
+                  alignItems: "center",
+                  backgroundColor: image ? "rgba(0, 0, 0, 0.3)" : null,
+                }}
+              >
+                {image ? (
+                  <View
+                    style={{
+                      backgroundColor: "rgba(0, 0, 0, 0.5)",
+                      borderRadius: wp(29) / 2,
+                    }}
+                  >
+                    <Text
+                      style={{
+                        fontFamily: "Regular",
+                        fontSize: hp(12),
+                        color: colors.white,
+                        marginHorizontal: wp(10),
+                        marginVertical: hp(5),
+                      }}
+                    >
+                      Change Image
+                    </Text>
+                  </View>
+                ) : (
                   <Text
                     style={{
                       fontFamily: "Regular",
                       fontSize: hp(12),
-                      color: colors.white,
-                      marginHorizontal: wp(10),
-                      marginVertical: hp(5),
+                      color: colors.darkGrey,
                     }}
                   >
-                    Change Image
+                    Upload Image
                   </Text>
-                </View>
-              ) : (
-                <Text
-                  style={{
-                    fontFamily: "Regular",
-                    fontSize: hp(12),
-                    color: colors.darkGrey,
-                  }}
-                >
-                  Upload Image
-                </Text>
-              )}
-            </View>
-          </ImageBackground>
-        </TouchableOpacity>
-        <View style={{ width: "100%" }}>
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.black,
-              marginBottom: hp(15),
-            }}
-          >
-            Full Name
-          </Text>
-          <InputText title="Full Name" addStyle={{ marginBottom: hp(15) }} />
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.black,
-              marginBottom: hp(15),
-            }}
-          >
-            Email Address
-          </Text>
-          <InputText title="Email Address" />
+                )}
+              </View>
+            </ImageBackground>
+          </TouchableOpacity>
+          <View style={{ width: "100%" }}>
+            <Text
+              style={{
+                fontFamily: "Bold",
+                fontSize: hp(12),
+                color: colors.black,
+                marginBottom: hp(15),
+              }}
+            >
+              Full Name
+            </Text>
+            <InputText title="Full Name" addStyle={{ marginBottom: hp(15) }} />
+            <Text
+              style={{
+                fontFamily: "Bold",
+                fontSize: hp(12),
+                color: colors.black,
+                marginBottom: hp(15),
+              }}
+            >
+              Email Address
+            </Text>
+            <InputText title="Email Address" />
+          </View>
         </View>
-      </View>
-      <Button title="Save Profile" navRoute={() => null} />
-    </SafeAreaView>
+        <Button title="Save Profile" navRoute={() => null} />
+      </SafeAreaView>
+    </KeyboardAwareScrollView>
   );
 }
 

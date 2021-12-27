@@ -10,6 +10,7 @@ import {
   FlatList,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { Provider, Dialog, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -848,18 +849,25 @@ export default function AddRecipeScreen({ navigation }) {
 
   return (
     <Provider>
-      <View style={styles.container}>
-        <StatusBar
-          barStyle={image ? "light-content" : "dark-content"}
-          backgroundColor="transparent"
-          translucent={true}
-        />
-        <FlatList
-          ListHeaderComponent={() => renderHeader()}
-          ListFooterComponent={() => renderFooter()}
-          keyboardShouldPersistTaps="always"
-        />
-      </View>
+      <KeyboardAwareScrollView
+        enableAutomaticScroll
+        style={{ backgroundColor: colors.white }}
+        contentContainerStyle={{ flex: 1 }}
+        keyboardShouldPersistTaps="always"
+      >
+        <View style={styles.container}>
+          <StatusBar
+            barStyle={image ? "light-content" : "dark-content"}
+            backgroundColor="transparent"
+            translucent={true}
+          />
+          <FlatList
+            ListHeaderComponent={() => renderHeader()}
+            ListFooterComponent={() => renderFooter()}
+            keyboardShouldPersistTaps="always"
+          />
+        </View>
+      </KeyboardAwareScrollView>
     </Provider>
   );
 }

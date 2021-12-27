@@ -187,7 +187,7 @@ export default function GuestHomeScreen({ navigation }) {
           <Text style={styles.title}>Welcome Chef,</Text>
           <Text style={styles.desc}>what do you want to cook today?</Text>
         </View>
-        <InputText title="Search Recipes" />
+        <InputText title="Search Recipe" />
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{

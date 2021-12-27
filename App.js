@@ -21,7 +21,6 @@ import {
 } from "./src/screens/authentication";
 import {
   GuestHomeScreen,
-  GuestTrendingRecipeScreen,
   GuestRecipeScreen,
   GuestRecipeListScreen,
 } from "./src/screens/guest";
@@ -260,11 +259,6 @@ function GuestUserNavigator() {
       <StackGuest.Screen
         name="GuestHome"
         component={GuestHomeScreen}
-        options={stackOption}
-      />
-      <StackGuest.Screen
-        name="GuestTrendingRecipe"
-        component={GuestTrendingRecipeScreen}
         options={stackOption}
       />
       <StackGuest.Screen
