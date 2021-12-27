@@ -271,6 +271,11 @@ function GuestUserNavigator() {
         component={GuestRecipeListScreen}
         options={stackOption}
       />
+      <StackHome.Screen
+        name="FilterSearch"
+        component={FilterSearchScreen}
+        options={stackOption}
+      />
     </StackGuest.Navigator>
   );
 }

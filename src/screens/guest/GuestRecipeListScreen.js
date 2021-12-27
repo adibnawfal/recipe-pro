@@ -9,7 +9,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -25,7 +24,7 @@ export default function GuestRecipeListScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const { title, recipeData } = route.params;
+  const { title, recipeData, focus } = route.params;
   const [data, setData] = useState(recipeData);
   const [dataHolder, setDataHolder] = useState(recipeData);
 
@@ -156,71 +155,66 @@ export default function GuestRecipeListScreen({ navigation, route }) {
   }
 
   return (
-    <KeyboardAwareScrollView
-      enableAutomaticScroll
-      style={{ backgroundColor: colors.white }}
-      contentContainerStyle={{ flex: 1 }}
-      keyboardShouldPersistTaps="always"
-    >
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={{
-              width: wp(38),
-              justifyContent: "center",
-            }}
-            onPress={() => navigation.pop()}
-          >
-            <MaterialIcons name="arrow-back" size={30} color={colors.black} />
-          </TouchableOpacity>
-          <Text style={styles.headerTxt}>{title}</Text>
-          <View style={{ width: wp(38) }} />
-        </View>
-        <InputText
-          title="Search Recipe"
-          addStyle={{ marginVertical: hp(25) }}
-          onChangeText={(text) => searchFilter(text)}
-        />
-        <View
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <View style={styles.header}>
+        <TouchableOpacity
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: hp(15),
+            width: wp(38),
+            justifyContent: "center",
+          }}
+          onPress={() => navigation.pop()}
+        >
+          <MaterialIcons name="arrow-back" size={30} color={colors.black} />
+        </TouchableOpacity>
+        <Text style={styles.headerTxt}>{title}</Text>
+        <View style={{ width: wp(38) }} />
+      </View>
+      <InputText
+        navigation={navigation}
+        title="Search Recipe"
+        addStyle={{ marginVertical: hp(25) }}
+        onChangeText={(text) => searchFilter(text)}
+        focus={focus}
+      />
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: hp(15),
+        }}
+      >
+        <Text
+          style={{
+            fontFamily: "Bold",
+            fontSize: hp(12),
+            color: colors.black,
           }}
         >
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.black,
-            }}
-          >
-            Result
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.darkGrey,
-            }}
-          >
-            {data.length} Recipes
-          </Text>
-        </View>
-        <FlatList
-          data={data}
-          renderItem={({ item }) => renderRecipe(item)}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="always"
-        />
-      </SafeAreaView>
-    </KeyboardAwareScrollView>
+          Result
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Bold",
+            fontSize: hp(12),
+            color: colors.darkGrey,
+          }}
+        >
+          {data.length} Recipes
+        </Text>
+      </View>
+      <FlatList
+        data={data}
+        renderItem={({ item }) => renderRecipe(item)}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="always"
+      />
+    </SafeAreaView>
   );
 }
 

@@ -187,7 +187,49 @@ export default function GuestHomeScreen({ navigation }) {
           <Text style={styles.title}>Welcome Chef,</Text>
           <Text style={styles.desc}>what do you want to cook today?</Text>
         </View>
-        <InputText title="Search Recipe" />
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            height: hp(55),
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: wp(10),
+            backgroundColor: colors.lightGrey,
+          }}
+          onPress={() =>
+            navigation.navigate("GuestRecipeList", {
+              title: "Search Results",
+              recipeData: RECIPE_DATA,
+              focus: true,
+            })
+          }
+        >
+          <MaterialIcons
+            name="search"
+            size={24}
+            color={colors.darkGrey}
+            style={{ marginLeft: wp(27) }}
+          />
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: "Regular",
+              fontSize: hp(12),
+              color: colors.darkGrey,
+              marginLeft: wp(27),
+            }}
+          >
+            Search Recipe
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
+            <MaterialIcons
+              name="filter-list"
+              size={24}
+              color={colors.darkGrey}
+              style={{ marginRight: wp(27) }}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{

@@ -13,6 +13,7 @@ export default function InputText({
   addStyle,
   value,
   onChangeText,
+  focus = false,
 }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../assets/fonts/OpenSans-Regular.ttf"),
@@ -37,6 +38,7 @@ export default function InputText({
         />
       ) : null}
       <TextInput
+        autoFocus={focus}
         placeholder={title}
         placeholderTextColor={colors.darkGrey}
         keyboardType={title === "Email Address" ? "email-address" : "default"}

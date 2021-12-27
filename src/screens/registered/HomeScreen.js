@@ -10,14 +10,12 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-import { InputText } from "../../components";
 import { RECIPE_DATA } from "../../data/RECIPE_DATA";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
@@ -27,132 +25,6 @@ export default function HomeScreen({ navigation }) {
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
-
-  const [filter, setFilter] = useState(false);
-  const [data, setData] = useState(RECIPE_DATA);
-  const [dataHolder, setDataHolder] = useState(RECIPE_DATA);
-
-  const searchFilter = (text) => {
-    const filterData = dataHolder.filter((item) => {
-      let itemData = "";
-
-      itemData = `${item.title.toUpperCase()}`;
-
-      const textData = text.toUpperCase();
-
-      return itemData.indexOf(textData) > -1;
-    });
-
-    setData(filterData);
-  };
-
-  const renderSearch = (item) => {
-    return (
-      <TouchableOpacity
-        style={{
-          height: hp(89),
-          borderRadius: wp(10),
-          marginBottom: hp(15),
-          backgroundColor: colors.lightGrey,
-        }}
-        onPress={() => navigation.navigate("Recipe", { item })}
-      >
-        <ImageBackground
-          source={item.image}
-          resizeMode="cover"
-          style={{ flex: 1 }}
-          imageStyle={{ borderRadius: wp(10) }}
-        >
-          <View
-            style={{
-              flex: 1,
-              justifyContent: "space-between",
-              paddingHorizontal: wp(15),
-              paddingVertical: hp(15),
-              backgroundColor: "rgba(0, 0, 0, 0.3)",
-              borderRadius: wp(10),
-            }}
-          >
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "space-between",
-                alignItems: "flex-start",
-              }}
-            >
-              <Text
-                numberOfLines={2}
-                ellipsizeMode="tail"
-                style={{
-                  width: wp(200),
-                  fontFamily: "Bold",
-                  fontSize: hp(12),
-                  color: colors.white,
-                  marginBottom: hp(5),
-                }}
-              >
-                {item.title}
-              </Text>
-              <View>
-                <View
-                  style={{
-                    width: wp(54),
-                    height: hp(24),
-                    flexDirection: "row",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    backgroundColor: "rgba(0, 0, 0, 0.3)",
-                    borderRadius: wp(54) / 2,
-                    alignSelf: "flex-end",
-                  }}
-                >
-                  <MaterialIcons name="star" size={14} color={colors.yellow} />
-                  <Text
-                    style={{
-                      fontFamily: "Bold",
-                      fontSize: hp(10),
-                      color: colors.white,
-                      marginLeft: wp(5),
-                    }}
-                  >
-                    {item.rating}
-                  </Text>
-                </View>
-              </View>
-            </View>
-            <View>
-              <View
-                style={{
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                  alignItems: "center",
-                }}
-              >
-                <Text
-                  style={{
-                    fontFamily: "SemiBold",
-                    fontSize: hp(10),
-                    color: colors.white,
-                  }}
-                >
-                  <Text>{item.time}</Text>
-                  <Text> | </Text>
-                  <Text>{item.difficulty}</Text>
-                </Text>
-                <TouchableOpacity>
-                  <MaterialIcons
-                    name="favorite-outline"
-                    size={24}
-                    color={colors.white}
-                  />
-                </TouchableOpacity>
-              </View>
-            </View>
-          </View>
-        </ImageBackground>
-      </TouchableOpacity>
-    );
-  };
 
   const renderRecipe = (item) => {
     return (
@@ -350,11 +222,49 @@ export default function HomeScreen({ navigation }) {
             </ImageBackground>
           </TouchableOpacity>
         </View>
-        <InputText
-          navigation={navigation}
-          title="Search Recipe"
-          onChangeText={(text) => searchFilter(text)}
-        />
+        <TouchableOpacity
+          style={{
+            flexDirection: "row",
+            height: hp(55),
+            justifyContent: "center",
+            alignItems: "center",
+            borderRadius: wp(10),
+            backgroundColor: colors.lightGrey,
+          }}
+          onPress={() =>
+            navigation.navigate("RecipeList", {
+              title: "Search Results",
+              recipeData: RECIPE_DATA,
+              focus: true,
+            })
+          }
+        >
+          <MaterialIcons
+            name="search"
+            size={24}
+            color={colors.darkGrey}
+            style={{ marginLeft: wp(27) }}
+          />
+          <Text
+            style={{
+              flex: 1,
+              fontFamily: "Regular",
+              fontSize: hp(12),
+              color: colors.darkGrey,
+              marginLeft: wp(27),
+            }}
+          >
+            Search Recipe
+          </Text>
+          <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
+            <MaterialIcons
+              name="filter-list"
+              size={24}
+              color={colors.darkGrey}
+              style={{ marginRight: wp(27) }}
+            />
+          </TouchableOpacity>
+        </TouchableOpacity>
         <View style={{ marginTop: hp(25), marginBottom: hp(15) }}>
           <View
             style={{
@@ -395,26 +305,15 @@ export default function HomeScreen({ navigation }) {
               />
             </TouchableOpacity>
           </View>
-          {/* <FlatList
-              data={data}
-              renderItem={({ item }) => renderSearch(item)}
-              keyExtractor={(item) => item.id}
-              keyboardShouldPersistTaps="always"
-            /> */}
           <FlatList
-            horizontal={filter ? true : false}
-            data={filter ? trendingData : data}
-            renderItem={
-              filter
-                ? ({ item }) => renderRecipe(item)
-                : ({ item }) => renderSearch(item)
-            }
+            horizontal
+            data={trendingData}
+            renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
             style={styles.cardWrap}
           />
         </View>
-
         <View>
           <Text style={[styles.title, { fontSize: hp(12) }]}>Categories</Text>
         </View>
@@ -427,27 +326,20 @@ export default function HomeScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAwareScrollView
-      enableAutomaticScroll
-      style={{ backgroundColor: colors.white }}
-      contentContainerStyle={{ flex: 1 }}
-      keyboardShouldPersistTaps="always"
-    >
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
-        <FlatList
-          data={CATEGORY_DATA}
-          renderItem={({ item }) => renderCategory(item)}
-          keyExtractor={(item) => item.id}
-          ListHeaderComponent={renderHeader}
-          keyboardShouldPersistTaps="always"
-        />
-      </SafeAreaView>
-    </KeyboardAwareScrollView>
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <FlatList
+        data={CATEGORY_DATA}
+        renderItem={({ item }) => renderCategory(item)}
+        keyExtractor={(item) => item.id}
+        ListHeaderComponent={renderHeader}
+        keyboardShouldPersistTaps="always"
+      />
+    </SafeAreaView>
   );
 }
 
