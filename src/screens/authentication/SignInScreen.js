@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import ImageOverlay from "react-native-image-overlay";
@@ -33,18 +33,20 @@ export default function SignInScreen({ navigation }) {
 
   const auth = getAuth();
 
+  useEffect(() => {
+    if (!error) {
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {})
+        .catch(() => {
+          setError("The email address or password you entered is incorrect.");
+        });
+    }
+  }, [error]);
+
   const handleSignIn = () => {
     email != "" || password != ""
       ? setError(null)
       : setError("The email address or password you entered is incorrect.");
-
-    if (error != true) {
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {})
-        .catch((error) => {
-          console.log(error.message);
-        });
-    }
   };
 
   if (!fontsLoaded) {
