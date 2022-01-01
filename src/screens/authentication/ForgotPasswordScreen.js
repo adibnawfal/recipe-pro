@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import {
@@ -7,6 +7,7 @@ import {
   View,
   Text,
   TouchableOpacity,
+  ScrollView,
   Keyboard,
 } from "react-native";
 import {
@@ -15,7 +16,6 @@ import {
   Dialog,
   Button as PButton,
 } from "react-native-paper";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -31,35 +31,27 @@ export default function ForgotPasswordScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const [error, setError] = useState(true);
+  const [error, setError] = useState(null);
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [visible, setVisible] = useState(false);
 
   const auth = getAuth();
 
-  useEffect(() => {
-    if (!error) {
+  const handleForgotPassword = () => {
+    if (email != "") {
       sendPasswordResetEmail(auth, email)
         .then(() => {
           Keyboard.dismiss();
-          setError(false);
+          setError(null);
           setVisible(true);
         })
         .catch(() => {
           Keyboard.dismiss();
-          setEmailError("Please enter a valid email address.");
-          setError(true);
+          setError("Please enter a valid email address.");
         });
+    } else {
+      setError("Please enter a valid email address.");
     }
-  }, [error]);
-
-  const handleForgotPassword = () => {
-    email != ""
-      ? (Keyboard.dismiss(), setError(false))
-      : (setEmailError("Please enter a valid email address."),
-        Keyboard.dismiss(),
-        setError(true));
   };
 
   if (!fontsLoaded) {
@@ -68,13 +60,11 @@ export default function ForgotPasswordScreen({ navigation }) {
 
   return (
     <Provider>
-      <KeyboardAwareScrollView
-        enableAutomaticScroll
-        style={{ backgroundColor: colors.white }}
-        contentContainerStyle={{ flex: 1 }}
-        keyboardShouldPersistTaps="always"
-      >
-        <SafeAreaView style={styles.container}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+        <ScrollView
+          contentContainerStyle={styles.container}
+          keyboardShouldPersistTaps="always"
+        >
           <StatusBar
             barStyle="dark-content"
             backgroundColor="transparent"
@@ -143,21 +133,21 @@ export default function ForgotPasswordScreen({ navigation }) {
               value={email}
               onChangeText={(email) => setEmail(email)}
             />
-            {error && <Text style={styles.errorTxt}>{emailError}</Text>}
+            {error ? <Text style={styles.errorTxt}>{error}</Text> : null}
           </View>
           <Button
             title="Reset Password"
             onPress={() => handleForgotPassword()}
           />
-        </SafeAreaView>
-      </KeyboardAwareScrollView>
+        </ScrollView>
+      </SafeAreaView>
     </Provider>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
+    flexGrow: 1,
     justifyContent: "space-between",
     paddingHorizontal: wp(27),
     paddingTop: hp(10),

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { getAuth, signInWithEmailAndPassword } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import ImageOverlay from "react-native-image-overlay";
@@ -9,8 +9,8 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Keyboard,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -27,32 +27,26 @@ export default function SignInScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const [error, setError] = useState(true);
+  const [error, setError] = useState(null);
   const [email, setEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [password, setPassword] = useState("");
 
   const auth = getAuth();
 
-  useEffect(() => {
-    if (!error) {
-      signInWithEmailAndPassword(auth, email, password)
-        .then(() => {})
-        .catch(() => {
-          setEmailError(
-            "The email address or password you entered is incorrect."
-          );
-        });
-    }
-  }, [error]);
-
   const handleSignIn = () => {
-    email != "" || password != ""
-      ? setError(null)
-      : (setEmailError(
-          "The email address or password you entered is incorrect."
-        ),
-        setError(true));
+    if (email != "" || password != "") {
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          Keyboard.dismiss();
+          setError(null);
+        })
+        .catch(() => {
+          Keyboard.dismiss();
+          setError("The email address or password you entered is incorrect.");
+        });
+    } else {
+      setError("The email address or password you entered is incorrect.");
+    }
   };
 
   if (!fontsLoaded) {
@@ -60,13 +54,11 @@ export default function SignInScreen({ navigation }) {
   }
 
   return (
-    <KeyboardAwareScrollView
-      enableAutomaticScroll
-      style={{ backgroundColor: colors.white }}
-      contentContainerStyle={{ flex: 1 }}
-      keyboardShouldPersistTaps="always"
-    >
-      <ScrollView contentContainerStyle={styles.container}>
+    <View style={{ flex: 1, backgroundColor: colors.white }}>
+      <ScrollView
+        contentContainerStyle={styles.container}
+        keyboardShouldPersistTaps="always"
+      >
         <StatusBar
           barStyle="light-content"
           backgroundColor="transparent"
@@ -102,7 +94,7 @@ export default function SignInScreen({ navigation }) {
           </ImageOverlay>
         </View>
         <View style={styles.bodyWrap}>
-          <View>
+          <View style={{ marginBottom: error ? null : hp(25) }}>
             <View style={{ marginBottom: hp(25) }}>
               <Text style={styles.title}>Welcome back,</Text>
               <Text style={styles.desc}>sign in to continue</Text>
@@ -125,7 +117,7 @@ export default function SignInScreen({ navigation }) {
               <Text style={styles.forgotPass}>Forgot Password?</Text>
             </TouchableOpacity>
           </View>
-          {error && <Text style={styles.errorTxt}>{emailError}</Text>}
+          {error ? <Text style={styles.errorTxt}>{error}</Text> : null}
           <View style={{ width: "100%", alignItems: "center" }}>
             <TouchableOpacity onPress={() => navigation.navigate("Register")}>
               <Text style={styles.registerTxt}>
@@ -143,7 +135,7 @@ export default function SignInScreen({ navigation }) {
           </View>
         </View>
       </ScrollView>
-    </KeyboardAwareScrollView>
+    </View>
   );
 }
 

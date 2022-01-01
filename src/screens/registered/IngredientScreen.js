@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import AppLoading from "expo-app-loading";
 import {
   StyleSheet,
@@ -22,11 +22,28 @@ export default function IngredientScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const { title, data } = route.params;
+  const [ingredientData, setIngredientData] = useState(data);
+  const [name, setName] = useState("");
+  const [value, setValue] = useState("");
+  const [measure, setMeasure] = useState("");
+
+  const handleIngredient = async () => {
+    ingredientData.push({
+      id: data.length,
+      name: name,
+      value: value,
+      measure: measure,
+    });
+
+    await setIngredientData(ingredientData);
+
+    navigation.pop();
+  };
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
-
-  const { title } = route.params;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -72,7 +89,12 @@ export default function IngredientScreen({ navigation, route }) {
           >
             Ingredient Name
           </Text>
-          <InputText title="Flour" addStyle={{ marginBottom: hp(15) }} />
+          <InputText
+            title="Flour"
+            addStyle={{ marginBottom: hp(15) }}
+            value={name}
+            onChangeText={(name) => setName(name)}
+          />
           <Text
             style={{
               fontFamily: "Bold",
@@ -91,15 +113,23 @@ export default function IngredientScreen({ navigation, route }) {
             }}
           >
             <View style={{ width: wp(145) }}>
-              <InputText title="0.00" />
+              <InputText
+                title="0.00"
+                value={value}
+                onChangeText={(value) => setValue(value)}
+              />
             </View>
             <View style={{ width: wp(145) }}>
-              <InputText title="Cup" />
+              <InputText
+                title="Cup"
+                value={measure}
+                onChangeText={(measure) => setMeasure(measure)}
+              />
             </View>
           </View>
         </View>
       </View>
-      <Button title={title} navRoute={() => null} />
+      <Button title={title} onPress={() => handleIngredient()} />
     </SafeAreaView>
   );
 }

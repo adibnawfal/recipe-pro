@@ -1,4 +1,7 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "../../config/Fire";
+import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
+import { setDoc, doc } from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -10,7 +13,6 @@ import {
   FlatList,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { Provider, Dialog, Portal } from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -24,6 +26,8 @@ import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 import { CUISINETYPE_DATA } from "../../data/CUISINETYPE_DATA";
 import { DIFFICULTY_DATA } from "../../data/DIFFICULTY_DATA";
 
+import { useIsFocused } from "@react-navigation/native";
+
 export default function AddRecipeScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
@@ -33,10 +37,7 @@ export default function AddRecipeScreen({ navigation }) {
 
   const [menu, setMenu] = useState(false);
   const [image, setImage] = useState(null);
-  const [visibleCategory, setVisibleCategory] = useState(false);
-  const [visibleCuisineType, setVisibleCuisineType] = useState(false);
-  const [visibleTime, setVisibleTime] = useState(false);
-  const [visibleDifficulty, setVisibleDifficulty] = useState(false);
+  const [recipeName, setRecipeName] = useState("");
   const [category, setCategory] = useState(null);
   const [cuisineType, setCuisineType] = useState(null);
   const [time, setTime] = useState(0);
@@ -44,6 +45,28 @@ export default function AddRecipeScreen({ navigation }) {
   const [hour, setHour] = useState(0);
   const [minute, setMinute] = useState(0);
   const [difficulty, setDifficulty] = useState(null);
+  const [ingredient, setIngredient] = useState([]);
+  const [step, setStep] = useState([]);
+  const [visibleCategory, setVisibleCategory] = useState(false);
+  const [visibleCuisineType, setVisibleCuisineType] = useState(false);
+  const [visibleTime, setVisibleTime] = useState(false);
+  const [visibleDifficulty, setVisibleDifficulty] = useState(false);
+
+  const auth = getAuth();
+  const isFocused = useIsFocused();
+
+  // useEffect(() => {
+  //   // Call only when screen open or when back on screen
+  //   console.log(ingredient);
+  // }, [isFocused]);
+
+  // const handleAddRecipe = () = {
+  //   if (category) {
+
+  //   } else {
+
+  //   }
+  // }
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -147,6 +170,58 @@ export default function AddRecipeScreen({ navigation }) {
           {item.title}
         </Text>
       </TouchableOpacity>
+    );
+  };
+
+  const renderIngredient = (item) => {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: hp(15),
+        }}
+      >
+        <View
+          style={{
+            flex: 1,
+            height: "100%",
+            flexDirection: "row",
+            alignItems: "center",
+            paddingRight: wp(5),
+          }}
+        >
+          <View
+            style={{
+              width: wp(3),
+              height: "100%",
+              backgroundColor: colors.primary,
+            }}
+          />
+          <Text
+            style={{
+              fontFamily: "Regular",
+              fontSize: hp(12),
+              color: colors.black,
+              marginVertical: hp(4),
+              marginLeft: wp(17),
+              marginRight: wp(17),
+            }}
+          >
+            {item.name}
+          </Text>
+        </View>
+        <Text
+          style={{
+            fontFamily: "Regular",
+            fontSize: hp(12),
+            color: colors.black,
+          }}
+        >
+          {item.value + " " + item.measure}
+        </Text>
+      </View>
     );
   };
 
@@ -266,7 +341,11 @@ export default function AddRecipeScreen({ navigation }) {
             >
               Recipe Name
             </Text>
-            <InputText title="Fried Chicken" />
+            <InputText
+              title="Fried Chicken"
+              value={recipeName}
+              onChangeText={(recipeName) => setRecipeName(recipeName)}
+            />
           </View>
           <View style={{ marginVertical: hp(15) }}>
             <Text
@@ -431,12 +510,6 @@ export default function AddRecipeScreen({ navigation }) {
                       alignItems: "center",
                     }}
                   >
-                    {/* <FlatList
-                      data={CUISINETYPE_DATA}
-                      renderItem={({ item }) => renderCuisineType(item)}
-                      keyExtractor={(item) => item.id}
-                      keyboardShouldPersistTaps="always"
-                    /> */}
                     <Text
                       style={{
                         fontFamily: "Bold",
@@ -721,9 +794,17 @@ export default function AddRecipeScreen({ navigation }) {
                 color: colors.darkGrey,
               }}
             >
-              0 Items
+              {ingredient.length} Items
             </Text>
           </View>
+          {ingredient.length > 0 ? (
+            <FlatList
+              data={ingredient}
+              renderItem={({ item }) => renderIngredient(item)}
+              keyExtractor={(item) => item.id}
+              keyboardShouldPersistTaps="always"
+            />
+          ) : null}
           <View
             style={{
               flexDirection: "row",
@@ -752,6 +833,7 @@ export default function AddRecipeScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("Ingredient", {
                   title: "Add Ingredient",
+                  data: ingredient,
                 })
               }
             >
@@ -849,25 +931,18 @@ export default function AddRecipeScreen({ navigation }) {
 
   return (
     <Provider>
-      <KeyboardAwareScrollView
-        enableAutomaticScroll
-        style={{ backgroundColor: colors.white }}
-        contentContainerStyle={{ flex: 1 }}
-        keyboardShouldPersistTaps="always"
-      >
-        <View style={styles.container}>
-          <StatusBar
-            barStyle={image ? "light-content" : "dark-content"}
-            backgroundColor="transparent"
-            translucent={true}
-          />
-          <FlatList
-            ListHeaderComponent={() => renderHeader()}
-            ListFooterComponent={() => renderFooter()}
-            keyboardShouldPersistTaps="always"
-          />
-        </View>
-      </KeyboardAwareScrollView>
+      <View style={styles.container}>
+        <StatusBar
+          barStyle={image ? "light-content" : "dark-content"}
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <FlatList
+          ListHeaderComponent={() => renderHeader()}
+          ListFooterComponent={() => renderFooter()}
+          keyboardShouldPersistTaps="always"
+        />
+      </View>
     </Provider>
   );
 }
