@@ -1,7 +1,15 @@
-import React, { useState, useEffect } from "react";
+import * as ImagePicker from "expo-image-picker";
+import React, { useState } from "react";
 import { db } from "../../config/Fire";
-import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
-import { setDoc, doc } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import {
+  doc,
+  collection,
+  addDoc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -11,10 +19,15 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
+  Keyboard,
 } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import { Menu, MenuItem } from "react-native-material-menu";
-import { Provider, Dialog, Portal } from "react-native-paper";
+import {
+  Provider,
+  Portal,
+  Dialog,
+  Button as PButton,
+} from "react-native-paper";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -51,6 +64,7 @@ export default function AddRecipeScreen({ navigation }) {
   const [visibleCuisineType, setVisibleCuisineType] = useState(false);
   const [visibleTime, setVisibleTime] = useState(false);
   const [visibleDifficulty, setVisibleDifficulty] = useState(false);
+  const [visible, setVisible] = useState(false);
 
   const auth = getAuth();
   const isFocused = useIsFocused();
@@ -67,6 +81,59 @@ export default function AddRecipeScreen({ navigation }) {
 
   //   }
   // }
+
+  const handleAddRecipe = async () => {
+    if (
+      image != null &&
+      recipeName != "" &&
+      category != null &&
+      cuisineType != null &&
+      time != null &&
+      difficulty != null &&
+      ingredient.length != 0 &&
+      step.length != 0
+    ) {
+      const docRef = doc(db, "users", auth.currentUser.uid);
+      const docSnap = await getDoc(docRef);
+
+      if (docSnap.exists()) {
+        console.log("inside");
+        const newDocRef = await addDoc(collection(db, "recipe"), {
+          id: 0,
+          userId: auth.currentUser.uid,
+          userName: docSnap.data().fullName,
+          title: recipeName,
+          image: null,
+          category: category,
+          cuisineType: cuisineType,
+          time: time,
+          difficulty: difficulty,
+          rating: 0,
+          ingredient: ingredient,
+          step: step,
+        });
+
+        await updateDoc(doc(db, "users", auth.currentUser.uid), {
+          myRecipe: arrayUnion({
+            id: 0,
+            recipeId: newDocRef.id,
+          }),
+        });
+      } else {
+        console.log("No such document!");
+      }
+
+      Keyboard.dismiss();
+    } else {
+      Keyboard.dismiss();
+      setVisible(true);
+    }
+  };
+
+  const handleTime = () => {
+    setVisibleTime(false);
+    setTime(minute);
+  };
 
   const pickImage = async () => {
     let result = await ImagePicker.launchImageLibraryAsync({
@@ -225,6 +292,37 @@ export default function AddRecipeScreen({ navigation }) {
     );
   };
 
+  const renderStep = (item) => {
+    return (
+      <View
+        style={{
+          flexDirection: "row",
+          marginBottom: hp(15),
+        }}
+      >
+        <View
+          style={{
+            width: wp(5),
+            height: wp(5),
+            borderRadius: wp(5) / 2,
+            marginTop: hp(6),
+            backgroundColor: colors.primary,
+          }}
+        />
+        <Text
+          style={{
+            fontFamily: "Regular",
+            fontSize: hp(12),
+            color: colors.black,
+            marginLeft: wp(15),
+          }}
+        >
+          {item.step}
+        </Text>
+      </View>
+    );
+  };
+
   const renderHeader = () => {
     return (
       <View>
@@ -232,44 +330,29 @@ export default function AddRecipeScreen({ navigation }) {
           <ImageBackground
             source={{ uri: image }}
             resizeMode="cover"
-            style={{
-              height: hp(230),
-              backgroundColor: colors.lightGrey,
-            }}
+            style={styles.imgWrap}
           >
             <SafeAreaView
-              style={{
-                flex: 1,
-                justifyContent: "space-between",
-                alignItems: "center",
-                paddingHorizontal: wp(27),
-                paddingVertical: hp(10),
-                backgroundColor: image ? "rgba(0, 0, 0, 0.3)" : null,
-              }}
+              style={[
+                styles.imgBody,
+                { backgroundColor: image ? "rgba(0, 0, 0, 0.3)" : null },
+              ]}
             >
-              <View
-                style={{
-                  width: "100%",
-                  flexDirection: "row",
-                  justifyContent: "space-between",
-                }}
-              >
+              <View style={styles.headerWrap}>
                 <View style={{ width: wp(38) }} />
                 <Menu
                   visible={menu}
                   style={styles.menuWrap}
                   anchor={
                     <TouchableOpacity
-                      style={{
-                        width: wp(38),
-                        height: wp(38),
-                        borderRadius: wp(38) / 2,
-                        justifyContent: "center",
-                        alignItems: "center",
-                        backgroundColor: image
-                          ? "rgba(0, 0, 0, 0.5)"
-                          : "rgba(0, 0, 0, 0.3)",
-                      }}
+                      style={[
+                        styles.menuBtn,
+                        {
+                          backgroundColor: image
+                            ? "rgba(0, 0, 0, 0.5)"
+                            : "rgba(0, 0, 0, 0.3)",
+                        },
+                      ]}
                       onPress={() => setMenu(true)}
                     >
                       <MaterialIcons
@@ -290,57 +373,19 @@ export default function AddRecipeScreen({ navigation }) {
                 </Menu>
               </View>
               {image ? (
-                <View
-                  style={{
-                    backgroundColor: "rgba(0, 0, 0, 0.5)",
-                    borderRadius: wp(29) / 2,
-                  }}
-                >
-                  <Text
-                    style={{
-                      fontFamily: "Regular",
-                      fontSize: hp(12),
-                      color: colors.white,
-                      marginHorizontal: wp(10),
-                      marginVertical: hp(5),
-                    }}
-                  >
-                    Change Image
-                  </Text>
+                <View style={styles.changeImgWrap}>
+                  <Text style={styles.changeImgTxt}>Change Image</Text>
                 </View>
               ) : (
-                <Text
-                  style={{
-                    fontFamily: "Regular",
-                    fontSize: hp(12),
-                    color: colors.darkGrey,
-                  }}
-                >
-                  Upload Image
-                </Text>
+                <Text style={styles.uploadImgTxt}>Upload Image</Text>
               )}
               <View style={{ width: "100%", height: wp(38) }} />
             </SafeAreaView>
           </ImageBackground>
         </TouchableOpacity>
-        <View
-          style={{
-            flex: 1,
-            paddingHorizontal: wp(27),
-            paddingTop: hp(25),
-          }}
-        >
+        <View style={styles.bodyWrap}>
           <View>
-            <Text
-              style={{
-                fontFamily: "Bold",
-                fontSize: hp(12),
-                color: colors.black,
-                marginBottom: hp(15),
-              }}
-            >
-              Recipe Name
-            </Text>
+            <Text style={styles.recipeNameTxt}>Recipe Name</Text>
             <InputText
               title="Fried Chicken"
               value={recipeName}
@@ -348,34 +393,16 @@ export default function AddRecipeScreen({ navigation }) {
             />
           </View>
           <View style={{ marginVertical: hp(15) }}>
-            <Text
-              style={{
-                fontFamily: "Bold",
-                fontSize: hp(12),
-                color: colors.black,
-                marginBottom: hp(15),
-              }}
-            >
-              Category
-            </Text>
+            <Text style={styles.categoryTxt}>Category</Text>
             <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                height: hp(55),
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderRadius: wp(10),
-                backgroundColor: colors.lightGrey,
-                paddingHorizontal: wp(27),
-              }}
+              style={styles.categoryBtn}
               onPress={() => setVisibleCategory(true)}
             >
               <Text
-                style={{
-                  fontFamily: "Regular",
-                  fontSize: hp(12),
-                  color: category === null ? colors.darkGrey : colors.black,
-                }}
+                style={[
+                  styles.categoryBtnTxt,
+                  { color: category === null ? colors.darkGrey : colors.black },
+                ]}
               >
                 {category === null ? "Select Category" : category}
               </Text>
@@ -385,51 +412,21 @@ export default function AddRecipeScreen({ navigation }) {
                 color={colors.darkGrey}
               />
             </TouchableOpacity>
-            <Portal>
-              <Dialog
-                visible={visibleCategory}
-                onDismiss={() => setVisibleCategory(false)}
-              >
-                <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-                  <FlatList
-                    data={CATEGORY_DATA}
-                    renderItem={({ item }) => renderCategory(item)}
-                    keyExtractor={(item) => item.id}
-                    keyboardShouldPersistTaps="always"
-                  />
-                </Dialog.ScrollArea>
-              </Dialog>
-            </Portal>
           </View>
           <View>
-            <Text
-              style={{
-                fontFamily: "Bold",
-                fontSize: hp(12),
-                color: colors.black,
-                marginBottom: hp(15),
-              }}
-            >
-              Cuisine Type
-            </Text>
+            <Text style={styles.cuisineTypeTxt}>Cuisine Type</Text>
             <TouchableOpacity
-              style={{
-                flexDirection: "row",
-                height: hp(55),
-                justifyContent: "space-between",
-                alignItems: "center",
-                borderRadius: wp(10),
-                backgroundColor: colors.lightGrey,
-                paddingHorizontal: wp(27),
-              }}
+              style={styles.cuisineTypeBtn}
               onPress={() => setVisibleCuisineType(true)}
             >
               <Text
-                style={{
-                  fontFamily: "Regular",
-                  fontSize: hp(12),
-                  color: cuisineType === null ? colors.darkGrey : colors.black,
-                }}
+                style={[
+                  styles.cuisineTypeBtnTxt,
+                  {
+                    color:
+                      cuisineType === null ? colors.darkGrey : colors.black,
+                  },
+                ]}
               >
                 {cuisineType === null ? "Select Cuisine Type" : cuisineType}
               </Text>
@@ -439,301 +436,22 @@ export default function AddRecipeScreen({ navigation }) {
                 color={colors.darkGrey}
               />
             </TouchableOpacity>
-            <Portal>
-              <Dialog
-                visible={visibleCuisineType}
-                onDismiss={() => setVisibleCuisineType(false)}
-              >
-                <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-                  <FlatList
-                    data={CUISINETYPE_DATA}
-                    renderItem={({ item }) => renderCuisineType(item)}
-                    keyExtractor={(item) => item.id}
-                    keyboardShouldPersistTaps="always"
-                  />
-                </Dialog.ScrollArea>
-              </Dialog>
-            </Portal>
           </View>
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginTop: hp(15),
-            }}
-          >
+          <View style={styles.timeDifficultyWrap}>
             <View style={{ width: wp(145) }}>
-              <Text
-                style={{
-                  fontFamily: "Bold",
-                  fontSize: hp(12),
-                  color: colors.black,
-                  marginBottom: hp(15),
-                }}
-              >
-                Time
-              </Text>
+              <Text style={styles.timeTxt}>Time</Text>
               <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  height: hp(55),
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: wp(10),
-                  backgroundColor: colors.lightGrey,
-                }}
+                style={styles.timeBtn}
                 onPress={() => setVisibleTime(true)}
               >
                 <MaterialIcons name="timer" size={24} color={colors.darkGrey} />
-                <Text
-                  style={{
-                    fontFamily: "Regular",
-                    fontSize: hp(12),
-                    color: colors.darkGrey,
-                    marginLeft: wp(5),
-                  }}
-                >
-                  {time} Min
-                </Text>
+                <Text style={styles.timeBtnTxt}>{time} Min</Text>
               </TouchableOpacity>
-              <Portal>
-                <Dialog
-                  visible={visibleTime}
-                  onDismiss={() => setVisibleTime(false)}
-                >
-                  <Dialog.ScrollArea
-                    style={{
-                      paddingHorizontal: 0,
-                      paddingVertical: hp(25),
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                  >
-                    <Text
-                      style={{
-                        fontFamily: "Bold",
-                        fontSize: hp(12),
-                        color: colors.black,
-                        marginBottom: hp(25),
-                      }}
-                    >
-                      Cooking Time
-                    </Text>
-                    <View style={{ flexDirection: "row" }}>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={day === 30 ? null : () => setDay(day + 1)}
-                        >
-                          <MaterialIcons
-                            name="expand-less"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Bold",
-                            fontSize: hp(12),
-                            color: colors.black,
-                            marginVertical: hp(5),
-                          }}
-                        >
-                          {day}
-                        </Text>
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={day === 0 ? null : () => setDay(day - 1)}
-                        >
-                          <MaterialIcons
-                            name="expand-more"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Regular",
-                            fontSize: hp(10),
-                            color: colors.black,
-                            marginTop: hp(5),
-                          }}
-                        >
-                          Days
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                          marginHorizontal: wp(15),
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={hour === 24 ? null : () => setHour(hour + 1)}
-                        >
-                          <MaterialIcons
-                            name="expand-less"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Bold",
-                            fontSize: hp(12),
-                            color: colors.black,
-                            marginVertical: hp(5),
-                          }}
-                        >
-                          {hour}
-                        </Text>
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={hour === 0 ? null : () => setHour(hour - 1)}
-                        >
-                          <MaterialIcons
-                            name="expand-more"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Regular",
-                            fontSize: hp(10),
-                            color: colors.black,
-                            marginTop: hp(5),
-                          }}
-                        >
-                          Hours
-                        </Text>
-                      </View>
-                      <View
-                        style={{
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}
-                      >
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={
-                            minute === 60 ? null : () => setMinute(minute + 1)
-                          }
-                        >
-                          <MaterialIcons
-                            name="expand-less"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Bold",
-                            fontSize: hp(12),
-                            color: colors.black,
-                            marginVertical: hp(5),
-                          }}
-                        >
-                          {minute}
-                        </Text>
-                        <TouchableOpacity
-                          style={{
-                            width: wp(30),
-                            height: wp(30),
-                            justifyContent: "center",
-                            alignItems: "center",
-                            borderRadius: wp(5),
-                            backgroundColor: colors.lightGrey,
-                          }}
-                          onPress={
-                            minute === 0 ? null : () => setMinute(minute - 1)
-                          }
-                        >
-                          <MaterialIcons
-                            name="expand-more"
-                            size={24}
-                            color={colors.darkGrey}
-                          />
-                        </TouchableOpacity>
-                        <Text
-                          style={{
-                            fontFamily: "Regular",
-                            fontSize: hp(10),
-                            color: colors.black,
-                            marginTop: hp(5),
-                          }}
-                        >
-                          Mins
-                        </Text>
-                      </View>
-                    </View>
-                  </Dialog.ScrollArea>
-                </Dialog>
-              </Portal>
             </View>
             <View style={{ width: wp(145) }}>
-              <Text
-                style={{
-                  fontFamily: "Bold",
-                  fontSize: hp(12),
-                  color: colors.black,
-                  marginBottom: hp(15),
-                }}
-              >
-                Difficulty
-              </Text>
+              <Text style={styles.timeTxt}>Difficulty</Text>
               <TouchableOpacity
-                style={{
-                  flexDirection: "row",
-                  height: hp(55),
-                  justifyContent: "center",
-                  alignItems: "center",
-                  borderRadius: wp(10),
-                  backgroundColor: colors.lightGrey,
-                }}
+                style={styles.timeBtn}
                 onPress={() => setVisibleDifficulty(true)}
               >
                 <MaterialIcons
@@ -742,58 +460,23 @@ export default function AddRecipeScreen({ navigation }) {
                   color={difficulty === null ? colors.darkGrey : colors.black}
                 />
                 <Text
-                  style={{
-                    fontFamily: "Regular",
-                    fontSize: hp(12),
-                    color: difficulty === null ? colors.darkGrey : colors.black,
-                    marginLeft: wp(5),
-                  }}
+                  style={[
+                    styles.timeBtnTxt,
+                    {
+                      color:
+                        difficulty === null ? colors.darkGrey : colors.black,
+                    },
+                  ]}
                 >
                   {difficulty === null ? "Easy" : difficulty}
                 </Text>
               </TouchableOpacity>
-              <Portal>
-                <Dialog
-                  visible={visibleDifficulty}
-                  onDismiss={() => setVisibleDifficulty(false)}
-                >
-                  <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
-                    <FlatList
-                      data={DIFFICULTY_DATA}
-                      renderItem={({ item }) => renderDifficulty(item)}
-                      keyExtractor={(item) => item.id}
-                      keyboardShouldPersistTaps="always"
-                    />
-                  </Dialog.ScrollArea>
-                </Dialog>
-              </Portal>
             </View>
           </View>
           <SectionBreak />
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-              marginBottom: hp(15),
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Bold",
-                fontSize: hp(12),
-                color: colors.black,
-              }}
-            >
-              Ingredients
-            </Text>
-            <Text
-              style={{
-                fontFamily: "Bold",
-                fontSize: hp(12),
-                color: colors.darkGrey,
-              }}
-            >
+          <View style={styles.ingredientWrap}>
+            <Text style={styles.ingredientTxt}>Ingredients</Text>
+            <Text style={styles.ingredientCountTxt}>
               {ingredient.length} Items
             </Text>
           </View>
@@ -805,31 +488,10 @@ export default function AddRecipeScreen({ navigation }) {
               keyboardShouldPersistTaps="always"
             />
           ) : null}
-          <View
-            style={{
-              flexDirection: "row",
-              justifyContent: "space-between",
-              alignItems: "center",
-            }}
-          >
-            <Text
-              style={{
-                fontFamily: "Regular",
-                fontSize: hp(12),
-                color: colors.darkGrey,
-              }}
-            >
-              Add Ingredient
-            </Text>
+          <View style={styles.addIngredientWrap}>
+            <Text style={styles.addIngredientTxt}>Add Ingredient</Text>
             <TouchableOpacity
-              style={{
-                width: wp(55),
-                height: wp(55),
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: wp(10),
-                backgroundColor: colors.lightGrey,
-              }}
+              style={styles.addIngredientBtn}
               onPress={() =>
                 navigation.navigate("Ingredient", {
                   title: "Add Ingredient",
@@ -847,69 +509,28 @@ export default function AddRecipeScreen({ navigation }) {
 
   const renderFooter = () => {
     return (
-      <View
-        style={{
-          flex: 1,
-          paddingHorizontal: wp(27),
-          paddingBottom: hp(25),
-        }}
-      >
+      <View style={styles.footerWrap}>
         <SectionBreak />
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: hp(15),
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.black,
-            }}
-          >
-            Step-By-Step
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.darkGrey,
-            }}
-          >
-            0 Steps
-          </Text>
+        <View style={styles.stepWrap}>
+          <Text style={styles.stepTxt}>Step-By-Step</Text>
+          <Text style={styles.stepCountTxt}>{step.length} Steps</Text>
         </View>
-        <View
-          style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-          }}
-        >
-          <Text
-            style={{
-              fontFamily: "Regular",
-              fontSize: hp(12),
-              color: colors.darkGrey,
-            }}
-          >
-            Add Step
-          </Text>
+        {step.length > 0 ? (
+          <FlatList
+            data={step}
+            renderItem={({ item }) => renderStep(item)}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="always"
+          />
+        ) : null}
+        <View style={styles.addStepWrap}>
+          <Text style={styles.addStepTxt}>Add Step</Text>
           <TouchableOpacity
-            style={{
-              width: wp(55),
-              height: wp(55),
-              justifyContent: "center",
-              alignItems: "center",
-              borderRadius: wp(10),
-              backgroundColor: colors.lightGrey,
-            }}
+            style={styles.addStepBtn}
             onPress={() =>
               navigation.navigate("Step", {
                 title: "Add Step",
+                data: step,
               })
             }
           >
@@ -918,8 +539,8 @@ export default function AddRecipeScreen({ navigation }) {
         </View>
         <Button
           title="Add Recipe"
-          navRoute={() => null}
           addStyle={{ marginTop: hp(25) }}
+          onPress={() => handleAddRecipe()}
         />
       </View>
     );
@@ -937,9 +558,171 @@ export default function AddRecipeScreen({ navigation }) {
           backgroundColor="transparent"
           translucent={true}
         />
+        <Portal>
+          <Dialog
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            style={{ borderRadius: wp(10), backgroundColor: colors.white }}
+          >
+            <Dialog.Title style={styles.dialogTitleTxt}>
+              Incomplete Details
+            </Dialog.Title>
+            <Dialog.Content
+              style={{ paddingHorizontal: wp(20), alignItems: "center" }}
+            >
+              <Text style={styles.dialogIncompleteTxt}>
+                Please complete your details to continue the add process.
+              </Text>
+            </Dialog.Content>
+            <Dialog.Actions style={styles.dialogActions}>
+              <PButton
+                uppercase={false}
+                color={colors.primary}
+                labelStyle={styles.dialogBtnTxt}
+                style={styles.dialogBtn}
+                onPress={() => setVisible(false)}
+              >
+                Continue
+              </PButton>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog
+            visible={visibleCategory}
+            onDismiss={() => setVisibleCategory(false)}
+          >
+            <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
+              <FlatList
+                data={CATEGORY_DATA}
+                renderItem={({ item }) => renderCategory(item)}
+                keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="always"
+              />
+            </Dialog.ScrollArea>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog
+            visible={visibleCuisineType}
+            onDismiss={() => setVisibleCuisineType(false)}
+          >
+            <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
+              <FlatList
+                data={CUISINETYPE_DATA}
+                renderItem={({ item }) => renderCuisineType(item)}
+                keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="always"
+              />
+            </Dialog.ScrollArea>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog visible={visibleTime} onDismiss={() => handleTime()}>
+            <Dialog.ScrollArea style={styles.dialogTimeWrap}>
+              <Text style={styles.dialogTimeTxt}>Cooking Time</Text>
+              <View style={{ flexDirection: "row" }}>
+                <View style={styles.dialogCountWrap}>
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={day === 30 ? null : () => setDay(day + 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-less"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTxt}>{day}</Text>
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={day === 0 ? null : () => setDay(day - 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-more"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTitleTxt}>Days</Text>
+                </View>
+                <View
+                  style={[
+                    styles.dialogCountWrap,
+                    {
+                      marginHorizontal: wp(15),
+                    },
+                  ]}
+                >
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={hour === 24 ? null : () => setHour(hour + 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-less"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTxt}>{hour}</Text>
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={hour === 0 ? null : () => setHour(hour - 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-more"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTitleTxt}>Hours</Text>
+                </View>
+                <View style={styles.dialogCountWrap}>
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={minute === 60 ? null : () => setMinute(minute + 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-less"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTxt}>{minute}</Text>
+                  <TouchableOpacity
+                    style={styles.dialogCountBtn}
+                    onPress={minute === 0 ? null : () => setMinute(minute - 1)}
+                  >
+                    <MaterialIcons
+                      name="expand-more"
+                      size={24}
+                      color={colors.darkGrey}
+                    />
+                  </TouchableOpacity>
+                  <Text style={styles.dialogCountTitleTxt}>Mins</Text>
+                </View>
+              </View>
+            </Dialog.ScrollArea>
+          </Dialog>
+        </Portal>
+        <Portal>
+          <Dialog
+            visible={visibleDifficulty}
+            onDismiss={() => setVisibleDifficulty(false)}
+          >
+            <Dialog.ScrollArea style={{ paddingHorizontal: 0 }}>
+              <FlatList
+                data={DIFFICULTY_DATA}
+                renderItem={({ item }) => renderDifficulty(item)}
+                keyExtractor={(item) => item.id}
+                keyboardShouldPersistTaps="always"
+              />
+            </Dialog.ScrollArea>
+          </Dialog>
+        </Portal>
         <FlatList
-          ListHeaderComponent={() => renderHeader()}
-          ListFooterComponent={() => renderFooter()}
+          ListHeaderComponent={renderHeader()}
+          ListFooterComponent={renderFooter()}
           keyboardShouldPersistTaps="always"
         />
       </View>
@@ -952,6 +735,22 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.white,
   },
+  imgWrap: {
+    height: hp(230),
+    backgroundColor: colors.lightGrey,
+  },
+  imgBody: {
+    flex: 1,
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: wp(27),
+    paddingVertical: hp(10),
+  },
+  headerWrap: {
+    width: "100%",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
   menuWrap: {
     left: null,
     right: 0,
@@ -959,9 +758,242 @@ const styles = StyleSheet.create({
     marginRight: wp(15),
     backgroundColor: colors.white,
   },
+  menuBtn: {
+    width: wp(38),
+    height: wp(38),
+    borderRadius: wp(38) / 2,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   menuTxt: {
     fontFamily: "SemiBold",
     fontSize: hp(12),
     color: colors.black,
+  },
+  changeImgWrap: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    borderRadius: wp(29) / 2,
+  },
+  changeImgTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.white,
+    marginHorizontal: wp(10),
+    marginVertical: hp(5),
+  },
+  uploadImgTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+  },
+  bodyWrap: {
+    flex: 1,
+    paddingHorizontal: wp(27),
+    paddingTop: hp(25),
+  },
+  recipeNameTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginBottom: hp(15),
+  },
+  categoryTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginBottom: hp(15),
+  },
+  categoryBtn: {
+    flexDirection: "row",
+    height: hp(55),
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: wp(10),
+    backgroundColor: colors.lightGrey,
+    paddingHorizontal: wp(27),
+  },
+  categoryBtnTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+  },
+  cuisineTypeTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginBottom: hp(15),
+  },
+  cuisineTypeBtn: {
+    flexDirection: "row",
+    height: hp(55),
+    justifyContent: "space-between",
+    alignItems: "center",
+    borderRadius: wp(10),
+    backgroundColor: colors.lightGrey,
+    paddingHorizontal: wp(27),
+  },
+  cuisineTypeBtnTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+  },
+  timeDifficultyWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginTop: hp(15),
+  },
+  timeTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginBottom: hp(15),
+  },
+  timeBtn: {
+    flexDirection: "row",
+    height: hp(55),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(10),
+    backgroundColor: colors.lightGrey,
+  },
+  timeBtnTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+    marginLeft: wp(5),
+  },
+  ingredientWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: hp(15),
+  },
+  ingredientTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+  },
+  ingredientCountTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+  },
+  addIngredientWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  addIngredientTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+  },
+  addIngredientBtn: {
+    width: wp(55),
+    height: wp(55),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(10),
+    backgroundColor: colors.lightGrey,
+  },
+  footerWrap: {
+    flex: 1,
+    paddingHorizontal: wp(27),
+    paddingBottom: hp(25),
+  },
+  stepWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: hp(15),
+  },
+  stepTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+  },
+  stepCountTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+  },
+  addStepWrap: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  addStepTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+  },
+  addStepBtn: {
+    width: wp(55),
+    height: wp(55),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(10),
+    backgroundColor: colors.lightGrey,
+  },
+  dialogTimeWrap: {
+    paddingHorizontal: 0,
+    paddingVertical: hp(25),
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dialogTimeTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginBottom: hp(25),
+  },
+  dialogCountWrap: {
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  dialogCountBtn: {
+    width: wp(30),
+    height: wp(30),
+    justifyContent: "center",
+    alignItems: "center",
+    borderRadius: wp(5),
+    backgroundColor: colors.lightGrey,
+  },
+  dialogCountTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
+    marginVertical: hp(5),
+  },
+  dialogCountTitleTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(10),
+    color: colors.black,
+    marginTop: hp(5),
+  },
+  dialogTitleTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(14),
+    color: colors.black,
+    textAlign: "center",
+  },
+  dialogIncompleteTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+    textAlign: "center",
+  },
+  dialogActions: {
+    justifyContent: "center",
+    paddingHorizontal: wp(20),
+    paddingBottom: hp(15),
+  },
+  dialogBtn: {
+    borderRadius: wp(5),
+    backgroundColor: colors.primary,
+  },
+  dialogBtnTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.white,
   },
 });

@@ -40,7 +40,11 @@ import {
 import { colors } from "./src/res/colors";
 import { hp } from "./src/config/dimensions";
 
-LogBox.ignoreAllLogs();
+import fixtimerbug from "./src/config/fixtimerbug";
+
+//LogBox.ignoreAllLogs();
+//LogBox.ignoreLogs([`Setting a timer for a long period`])
+LogBox.ignoreLogs([`AsyncStorage has been extracted from react-native core`]);
 
 enableScreens();
 

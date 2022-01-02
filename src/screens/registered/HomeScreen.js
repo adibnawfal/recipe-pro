@@ -1,4 +1,6 @@
-import React, { useState } from "react";
+import React from "react";
+import { db } from "../../config/Fire";
+import { collection } from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import _ from "lodash";
 import {
@@ -16,6 +18,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
+import { useData } from "../../data/useData";
 import { RECIPE_DATA } from "../../data/RECIPE_DATA";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
@@ -25,6 +28,12 @@ export default function HomeScreen({ navigation }) {
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
+
+  const recipeRef = collection(db, "recipe");
+
+  const { loading, data } = useData(recipeRef);
+
+  console.log(data);
 
   const renderRecipe = (item) => {
     return (
@@ -125,7 +134,13 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderCategory = (item) => {
-    let categoryData = _.filter(RECIPE_DATA, { category: item.title });
+    const categoryData = [];
+
+    data.forEach((doc) => {
+      if (doc.category == item.title) {
+        categoryData.push({ ...doc });
+      }
+    });
 
     return (
       <TouchableOpacity
@@ -307,7 +322,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <FlatList
             horizontal
-            data={trendingData}
+            data={data}
             renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
@@ -336,7 +351,7 @@ export default function HomeScreen({ navigation }) {
         data={CATEGORY_DATA}
         renderItem={({ item }) => renderCategory(item)}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader}
+        ListHeaderComponent={renderHeader()}
         keyboardShouldPersistTaps="always"
       />
     </SafeAreaView>

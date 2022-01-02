@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { getAuth } from "firebase/auth";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -26,12 +27,10 @@ export default function RecipeScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+
   const { item } = route.params;
   const [menu, setMenu] = useState(false);
-
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
 
   const renderIngredient = (item) => {
     return (
@@ -117,7 +116,7 @@ export default function RecipeScreen({ navigation, route }) {
     );
   };
 
-  const renderStar = (item) => {
+  const renderStar = () => {
     return (
       <TouchableOpacity>
         <MaterialIcons name="star-outline" size={30} color={colors.darkGrey} />
@@ -126,6 +125,8 @@ export default function RecipeScreen({ navigation, route }) {
   };
 
   const renderHeader = (item) => {
+    let rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <View>
         <ImageBackground
@@ -197,10 +198,18 @@ export default function RecipeScreen({ navigation, route }) {
                         marginLeft: wp(15),
                         backgroundColor: "rgba(0, 0, 0, 0.5)",
                       }}
-                      onPress={() => setMenu(true)}
+                      onPress={
+                        item.userId === auth.currentUser.uid
+                          ? () => setMenu(true)
+                          : null
+                      }
                     >
                       <MaterialIcons
-                        name="more-vert"
+                        name={
+                          item.userId === auth.currentUser.uid
+                            ? "more-vert"
+                            : "share"
+                        }
                         size={30}
                         color={colors.white}
                       />
@@ -261,7 +270,7 @@ export default function RecipeScreen({ navigation, route }) {
               color: colors.darkGrey,
             }}
           >
-            {item.by}
+            {item.userName}
           </Text>
           <View
             style={{
@@ -287,7 +296,7 @@ export default function RecipeScreen({ navigation, route }) {
                     color: colors.black,
                   }}
                 >
-                  {item.rating}
+                  {rating}
                 </Text>
                 <Text
                   style={{
@@ -447,7 +456,7 @@ export default function RecipeScreen({ navigation, route }) {
           horizontal
           data={item.star}
           renderItem={({ item }) => renderStar(item)}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item.no}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={{
             width: "100%",
@@ -460,6 +469,10 @@ export default function RecipeScreen({ navigation, route }) {
     );
   };
 
+  if (!fontsLoaded) {
+    return <AppLoading />;
+  }
+
   return (
     <View style={styles.container}>
       <StatusBar
@@ -471,8 +484,8 @@ export default function RecipeScreen({ navigation, route }) {
         data={item.ingredient}
         renderItem={({ item }) => renderIngredient(item)}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => renderHeader(item)}
-        ListFooterComponent={() => renderFooter(item)}
+        ListHeaderComponent={renderHeader(item)}
+        ListFooterComponent={renderFooter(item)}
         keyboardShouldPersistTaps="always"
       />
     </View>
@@ -485,10 +498,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
   },
   menuWrap: {
-    left: null,
-    right: 0,
     width: wp(160),
-    marginRight: wp(15),
     backgroundColor: colors.white,
   },
   menuTxt: {
