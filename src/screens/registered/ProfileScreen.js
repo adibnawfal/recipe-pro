@@ -1,6 +1,15 @@
 import React, { useState } from "react";
+import { db } from "../../config/Fire";
 import { getAuth, signOut } from "firebase/auth";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -17,7 +26,8 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-import { RECIPE_DATA } from "../../data/RECIPE_DATA";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 
 export default function ProfileScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
@@ -26,9 +36,13 @@ export default function ProfileScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const [menu, setMenu] = useState(false);
-
   const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const recipeRef = collection(db, "recipe");
+
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
+  const [menu, setMenu] = useState(false);
 
   const handleSignOut = () => {
     signOut(auth)
@@ -38,11 +52,23 @@ export default function ProfileScreen({ navigation }) {
       });
   };
 
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
+  const handleFavourite = async (item) => {
+    if (!item.favourite) {
+      await updateDoc(userRef, {
+        favourite: arrayUnion({
+          id: item.id,
+        }),
+      });
+    } else {
+      await updateDoc(userRef, {
+        favourite: arrayRemove({ id: item.id }),
+      });
+    }
+  };
 
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -52,10 +78,10 @@ export default function ProfileScreen({ navigation }) {
           marginRight: wp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("Recipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -91,7 +117,7 @@ export default function ProfileScreen({ navigation }) {
                   marginLeft: wp(5),
                 }}
               >
-                {item.rating}
+                {rating}
               </Text>
             </View>
             <View>
@@ -121,15 +147,15 @@ export default function ProfileScreen({ navigation }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleFavourite(item)}>
                   <MaterialIcons
-                    name="favorite-outline"
+                    name={item.favourite ? "favorite" : "favorite-outline"}
                     size={24}
-                    color={colors.white}
+                    color={item.favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
               </View>
@@ -210,7 +236,11 @@ export default function ProfileScreen({ navigation }) {
           }}
         >
           <ImageBackground
-            source={require("../../assets/images/profilepicture.jpg")}
+            source={
+              dataDoc.profilePicture != null
+                ? { uri: dataDoc.profilePicture }
+                : require("../../assets/images/profilepicture.jpg")
+            }
             resizeMode="cover"
             style={{ flex: 1 }}
             imageStyle={{ borderRadius: wp(125) }}
@@ -219,14 +249,13 @@ export default function ProfileScreen({ navigation }) {
               style={{
                 flex: 1,
                 borderRadius: wp(125) / 2,
-                backgroundColor: "rgba(0, 0, 0, 0.3)",
               }}
             />
           </ImageBackground>
         </View>
         <View style={{ justifyContent: "center", alignItems: "center" }}>
-          <Text style={styles.title}>Ahmad Ali</Text>
-          <Text style={styles.desc}>ahmadali@gmail.com</Text>
+          <Text style={styles.title}>{dataDoc.fullName}</Text>
+          <Text style={styles.desc}>{auth.currentUser.email}</Text>
         </View>
         <View
           style={{
@@ -237,11 +266,11 @@ export default function ProfileScreen({ navigation }) {
           }}
         >
           <View style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={styles.title}>36</Text>
+            <Text style={styles.title}>{myRecipeData.length}</Text>
             <Text style={styles.desc}>My Recipe</Text>
           </View>
           <View style={{ justifyContent: "center", alignItems: "center" }}>
-            <Text style={styles.title}>118</Text>
+            <Text style={styles.title}>{favouriteCount}</Text>
             <Text style={styles.desc}>Favourite</Text>
           </View>
         </View>
@@ -263,7 +292,7 @@ export default function ProfileScreen({ navigation }) {
               onPress={() =>
                 navigation.navigate("RecipeList", {
                   title: "My Recipe",
-                  recipeData: RECIPE_DATA,
+                  recipeData: myRecipeData,
                 })
               }
             >
@@ -285,7 +314,7 @@ export default function ProfileScreen({ navigation }) {
           </View>
           <FlatList
             horizontal
-            data={RECIPE_DATA}
+            data={myRecipeData}
             renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
@@ -296,15 +325,29 @@ export default function ProfileScreen({ navigation }) {
     );
   };
 
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
+    return <AppLoading />;
+  }
+
+  let favouriteCount = 0;
+  let myRecipeData = _.intersectionBy(dataCollection, dataDoc.myRecipe, "id");
+
+  _.forEach(myRecipeData, (doc) => {
+    if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+      doc.favourite = true;
+      favouriteCount++;
+    }
+  });
+
   return (
-    <SafeAreaView style={{ backgroundColor: colors.white }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
       <StatusBar
         barStyle="dark-content"
         backgroundColor="transparent"
         translucent={true}
       />
       <FlatList
-        ListHeaderComponent={({ item }) => renderHeader(item)}
+        ListHeaderComponent={renderHeader()}
         keyboardShouldPersistTaps="always"
       />
     </SafeAreaView>
@@ -332,10 +375,7 @@ const styles = StyleSheet.create({
     color: colors.black,
   },
   menuWrap: {
-    left: null,
-    right: 0,
     width: wp(160),
-    marginRight: wp(15),
     backgroundColor: colors.white,
   },
   menuTxt: {

@@ -1,5 +1,7 @@
 import React, { useState } from "react";
+import { db } from "../../config/Fire";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
+import { doc } from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import {
   StyleSheet,
@@ -31,27 +33,30 @@ export default function ChangePasswordScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+
   const [error, setError] = useState(null);
   const [email, setEmail] = useState("");
   const [visible, setVisible] = useState(false);
 
-  const auth = getAuth();
-
   const handleChangePassword = () => {
-    if (email != "") {
-      sendPasswordResetEmail(auth, email)
-        .then(() => {
-          Keyboard.dismiss();
-          setError(null);
-          setVisible(true);
-        })
-        .catch(() => {
-          Keyboard.dismiss();
-          setError("Please enter a valid email address.");
-        });
-    } else {
-      setError("Please enter a valid email address.");
-    }
+    sendPasswordResetEmail(auth, auth.currentUser.email)
+      .then(() => {
+        Keyboard.dismiss();
+        setError(null);
+        setVisible(true);
+      })
+      .catch((error) => {
+        Keyboard.dismiss();
+        setError("The process could not be completed.");
+        console.log(error);
+      });
+
+    // if (email != "") {
+    // } else {
+    //   setError("Please enter a valid email address.");
+    // }
   };
 
   if (!fontsLoaded) {
@@ -125,14 +130,36 @@ export default function ChangePasswordScreen({ navigation }) {
             <View style={{ marginVertical: hp(25) }}>
               <Text style={styles.title}>Change password,</Text>
               <Text style={styles.desc}>
-                enter the email address associated with your account
+                click change password to confirm changes.
               </Text>
             </View>
-            <InputText
+            <View
+              style={{
+                flexDirection: "row",
+                height: hp(55),
+                justifyContent: "center",
+                alignItems: "center",
+                borderRadius: wp(10),
+                backgroundColor: colors.lightGrey,
+              }}
+            >
+              <Text
+                style={{
+                  flex: 1,
+                  fontFamily: "Regular",
+                  fontSize: hp(12),
+                  color: colors.darkGrey,
+                  marginLeft: wp(27),
+                }}
+              >
+                {auth.currentUser.email}
+              </Text>
+            </View>
+            {/* <InputText
               title="Email Address"
               value={email}
               onChangeText={(email) => setEmail(email)}
-            />
+            /> */}
             {error ? <Text style={styles.errorTxt}>{error}</Text> : null}
           </View>
           <Button

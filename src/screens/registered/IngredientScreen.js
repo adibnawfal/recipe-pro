@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppLoading from "expo-app-loading";
 import {
   StyleSheet,
@@ -14,6 +14,7 @@ import {
   Dialog,
   Button as PButton,
 } from "react-native-paper";
+import { useIsFocused } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -29,19 +30,30 @@ export default function IngredientScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const { title, data } = route.params;
+  const isFocused = useIsFocused();
+
+  const { title, recipeEdit, data, editData, index } = route.params;
   const [ingredientData, setIngredientData] = useState(data);
   const [name, setName] = useState("");
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState(0);
   const [measure, setMeasure] = useState("");
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // Call only when screen open or when back on screen
+    if (editData != null) {
+      setName(editData.name);
+      setValue(editData.value);
+      setMeasure(editData.measure);
+    }
+  }, [isFocused, editData]);
 
   const handleIngredient = async () => {
     if (name != "" && value != "" && measure != "") {
       ingredientData.push({
         id: data.length,
         name: name,
-        value: value,
+        value: parseFloat(value),
         measure: measure,
       });
 
@@ -52,6 +64,36 @@ export default function IngredientScreen({ navigation, route }) {
       Keyboard.dismiss();
       setVisible(true);
     }
+  };
+
+  const handleEditIngredient = async () => {
+    const array = [...ingredientData];
+
+    array[index].name = name;
+    array[index].value = value;
+    array[index].measure = measure;
+
+    await setIngredientData(array);
+    navigation.pop();
+  };
+
+  const handleDeleteIngredient = async () => {
+    const data = recipeEdit;
+    let count = 0;
+
+    if (index !== -1) {
+      data.ingredient.splice(index, 1);
+    }
+
+    data.ingredient.forEach((item) => {
+      item.id = count++;
+    });
+
+    navigation.navigate({
+      name: "EditRecipe",
+      params: { recipeEdit: data },
+      merge: true,
+    });
   };
 
   if (!fontsLoaded) {
@@ -123,6 +165,7 @@ export default function IngredientScreen({ navigation, route }) {
                   justifyContent: "center",
                   alignItems: "flex-end",
                 }}
+                onPress={() => handleDeleteIngredient()}
               >
                 <MaterialIcons
                   name="delete-outline"
@@ -171,7 +214,7 @@ export default function IngredientScreen({ navigation, route }) {
               <View style={{ width: wp(145) }}>
                 <InputText
                   title="0.00"
-                  value={value}
+                  value={value.toString()}
                   onChangeText={(value) => setValue(value)}
                 />
               </View>
@@ -185,7 +228,14 @@ export default function IngredientScreen({ navigation, route }) {
             </View>
           </View>
         </View>
-        <Button title={title} onPress={() => handleIngredient()} />
+        <Button
+          title={title}
+          onPress={() => {
+            title === "Edit Ingredient"
+              ? handleEditIngredient()
+              : handleIngredient();
+          }}
+        />
       </SafeAreaView>
     </Provider>
   );

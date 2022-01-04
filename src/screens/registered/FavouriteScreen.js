@@ -1,5 +1,15 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { db } from "../../config/Fire";
+import { getAuth } from "firebase/auth";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -9,7 +19,6 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
-import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -18,7 +27,8 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { InputText } from "../../components";
-import { RECIPE_DATA } from "../../data/RECIPE_DATA";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 
 export default function FavouriteScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
@@ -27,9 +37,22 @@ export default function FavouriteScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const recipeRef = collection(db, "recipe");
+
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [menu, setMenu] = useState(false);
-  const [data, setData] = useState(RECIPE_DATA);
-  const [dataHolder, setDataHolder] = useState(RECIPE_DATA);
+  const [data, setData] = useState([]);
+  const [dataHolder, setDataHolder] = useState([]);
+
+  useEffect(() => {
+    let data = _.intersectionBy(dataCollection, dataDoc.favourite, "id");
+
+    setData(data);
+    setDataHolder(data);
+  }, [dataDoc, dataCollection]);
 
   const searchFilter = (text) => {
     const filterData = dataHolder.filter((item) => {
@@ -45,7 +68,31 @@ export default function FavouriteScreen({ navigation }) {
     setData(filterData);
   };
 
+  const handleClearFavourite = async () => {
+    setMenu(false);
+
+    await updateDoc(userRef, {
+      favourite: [],
+    });
+  };
+
+  const handleFavourite = async (item) => {
+    if (!item.favourite) {
+      await updateDoc(userRef, {
+        favourite: arrayUnion({
+          id: item.id,
+        }),
+      });
+    } else {
+      await updateDoc(userRef, {
+        favourite: arrayRemove({ id: item.id }),
+      });
+    }
+  };
+
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -54,10 +101,10 @@ export default function FavouriteScreen({ navigation }) {
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("Recipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -114,7 +161,7 @@ export default function FavouriteScreen({ navigation }) {
                       marginLeft: wp(5),
                     }}
                   >
-                    {item.rating}
+                    {rating}
                   </Text>
                 </View>
               </View>
@@ -134,15 +181,15 @@ export default function FavouriteScreen({ navigation }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleFavourite(item)}>
                   <MaterialIcons
-                    name="favorite-outline"
+                    name={item.favourite ? "favorite" : "favorite-outline"}
                     size={24}
-                    color={colors.white}
+                    color={item.favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
               </View>
@@ -153,92 +200,88 @@ export default function FavouriteScreen({ navigation }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
   }
 
+  let favouriteData = _.forEach(data, (doc) => {
+    doc.favourite = true;
+  });
+
   return (
-    <KeyboardAwareScrollView
-      enableAutomaticScroll
-      style={{ backgroundColor: colors.white }}
-      contentContainerStyle={{ flex: 1 }}
-      keyboardShouldPersistTaps="always"
-    >
-      <SafeAreaView style={styles.container}>
-        <StatusBar
-          barStyle="dark-content"
-          backgroundColor="transparent"
-          translucent={true}
-        />
-        <View style={styles.header}>
-          <View style={{ width: wp(38) }} />
-          <Text style={styles.headerTxt}>Favourite</Text>
-          <Menu
-            visible={menu}
-            style={styles.menuWrap}
-            anchor={
-              <TouchableOpacity
-                style={{
-                  width: wp(38),
-                  justifyContent: "center",
-                  alignItems: "flex-end",
-                }}
-                onPress={() => setMenu(true)}
-              >
-                <MaterialIcons
-                  name="more-vert"
-                  size={30}
-                  color={colors.black}
-                />
-              </TouchableOpacity>
-            }
-            onRequestClose={() => setMenu(false)}
+    <SafeAreaView style={styles.container}>
+      <StatusBar
+        barStyle="dark-content"
+        backgroundColor="transparent"
+        translucent={true}
+      />
+      <View style={styles.header}>
+        <View style={{ width: wp(38) }} />
+        <Text style={styles.headerTxt}>Favourite</Text>
+        <Menu
+          visible={menu}
+          style={styles.menuWrap}
+          anchor={
+            <TouchableOpacity
+              style={{
+                width: wp(38),
+                justifyContent: "center",
+                alignItems: "flex-end",
+              }}
+              onPress={() => setMenu(true)}
+            >
+              <MaterialIcons name="more-vert" size={30} color={colors.black} />
+            </TouchableOpacity>
+          }
+          onRequestClose={() => setMenu(false)}
+        >
+          <MenuItem
+            textStyle={styles.menuTxt}
+            onPress={() => handleClearFavourite()}
           >
-            <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
-              Clear Favourite
-            </MenuItem>
-          </Menu>
-        </View>
-        <InputText
-          title="Search Recipe"
-          addStyle={{ marginVertical: hp(25) }}
-          onChangeText={(text) => searchFilter(text)}
-        />
-        <View
+            Clear Favourite
+          </MenuItem>
+        </Menu>
+      </View>
+      <InputText
+        title="Search Recipe"
+        addStyle={{ marginVertical: hp(25) }}
+        onChangeText={(text) => searchFilter(text)}
+      />
+      <View
+        style={{
+          flexDirection: "row",
+          justifyContent: "space-between",
+          alignItems: "center",
+          marginBottom: hp(15),
+        }}
+      >
+        <Text
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: hp(15),
+            fontFamily: "Bold",
+            fontSize: hp(12),
+            color: colors.black,
           }}
         >
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.black,
-            }}
-          >
-            Result
-          </Text>
-          <Text
-            style={{
-              fontFamily: "Bold",
-              fontSize: hp(12),
-              color: colors.darkGrey,
-            }}
-          >
-            {data.length} Recipes
-          </Text>
-        </View>
-        <FlatList
-          data={data}
-          renderItem={({ item }) => renderRecipe(item)}
-          keyExtractor={(item) => item.id}
-          keyboardShouldPersistTaps="always"
-        />
-      </SafeAreaView>
-    </KeyboardAwareScrollView>
+          Result
+        </Text>
+        <Text
+          style={{
+            fontFamily: "Bold",
+            fontSize: hp(12),
+            color: colors.darkGrey,
+          }}
+        >
+          {favouriteData.length} Recipes
+        </Text>
+      </View>
+      <FlatList
+        data={favouriteData}
+        renderItem={({ item }) => renderRecipe(item)}
+        keyExtractor={(item) => item.id}
+        keyboardShouldPersistTaps="always"
+      />
+    </SafeAreaView>
   );
 }
 

@@ -1,6 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../../config/Fire";
-import { collection } from "firebase/firestore";
+import { getAuth } from "firebase/auth";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import _ from "lodash";
 import {
@@ -18,8 +25,8 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-import { useData } from "../../data/useData";
-import { RECIPE_DATA } from "../../data/RECIPE_DATA";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
 export default function HomeScreen({ navigation }) {
@@ -29,13 +36,30 @@ export default function HomeScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
   const recipeRef = collection(db, "recipe");
 
-  const { loading, data } = useData(recipeRef);
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
 
-  console.log(data);
+  const handleFavourite = async (item) => {
+    if (!item.favourite) {
+      await updateDoc(userRef, {
+        favourite: arrayUnion({
+          id: item.id,
+        }),
+      });
+    } else {
+      await updateDoc(userRef, {
+        favourite: arrayRemove({ id: item.id }),
+      });
+    }
+  };
 
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -45,10 +69,10 @@ export default function HomeScreen({ navigation }) {
           marginRight: wp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("Recipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -84,7 +108,7 @@ export default function HomeScreen({ navigation }) {
                   marginLeft: wp(5),
                 }}
               >
-                {item.rating}
+                {rating}
               </Text>
             </View>
             <View>
@@ -114,15 +138,15 @@ export default function HomeScreen({ navigation }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleFavourite(item)}>
                   <MaterialIcons
-                    name="favorite-outline"
+                    name={item.favourite ? "favorite" : "favorite-outline"}
                     size={24}
-                    color={colors.white}
+                    color={item.favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
               </View>
@@ -134,11 +158,13 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderCategory = (item) => {
-    const categoryData = [];
+    let categoryData = _.filter(dataCollection, (doc) => {
+      return doc.category === item.title;
+    });
 
-    data.forEach((doc) => {
-      if (doc.category == item.title) {
-        categoryData.push({ ...doc });
+    _.forEach(categoryData, (doc) => {
+      if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+        doc.favourite = true;
       }
     });
 
@@ -188,9 +214,17 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderHeader = () => {
-    let trendingData = _.filter(RECIPE_DATA, (item) => {
-      return item.rating > 4.5;
+    let trendingData = _.filter(dataCollection, (doc) => {
+      return doc.rating > 4.5;
     });
+
+    _.forEach(trendingData, (doc) => {
+      if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+        doc.favourite = true;
+      }
+    });
+
+    const firstName = _.split(dataDoc.fullName, " ", 1);
 
     return (
       <View
@@ -209,7 +243,7 @@ export default function HomeScreen({ navigation }) {
           }}
         >
           <View>
-            <Text style={styles.title}>Welcome Chef,</Text>
+            <Text style={styles.title}>Welcome {firstName},</Text>
             <Text style={styles.desc}>what do you want to cook today?</Text>
           </View>
           <TouchableOpacity
@@ -222,7 +256,11 @@ export default function HomeScreen({ navigation }) {
             onPress={() => navigation.navigate("Profile")}
           >
             <ImageBackground
-              source={require("../../assets/images/profilepicture.jpg")}
+              source={
+                dataDoc.profilePicture != null
+                  ? { uri: dataDoc.profilePicture }
+                  : require("../../assets/images/profilepicture.jpg")
+              }
               resizeMode="cover"
               style={{ flex: 1 }}
               imageStyle={{ borderRadius: wp(49) }}
@@ -231,7 +269,6 @@ export default function HomeScreen({ navigation }) {
                 style={{
                   flex: 1,
                   borderRadius: wp(49) / 2,
-                  backgroundColor: "rgba(0, 0, 0, 0.3)",
                 }}
               />
             </ImageBackground>
@@ -249,7 +286,7 @@ export default function HomeScreen({ navigation }) {
           onPress={() =>
             navigation.navigate("RecipeList", {
               title: "Search Results",
-              recipeData: RECIPE_DATA,
+              recipeData: dataCollection,
               focus: true,
             })
           }
@@ -322,7 +359,7 @@ export default function HomeScreen({ navigation }) {
           </View>
           <FlatList
             horizontal
-            data={data}
+            data={trendingData}
             renderItem={({ item }) => renderRecipe(item)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
@@ -336,7 +373,7 @@ export default function HomeScreen({ navigation }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
   }
 

@@ -187,10 +187,11 @@ export default function FilterSearchScreen({ navigation }) {
               color: colors.darkGrey,
             }}
           >
-            {fromValue} - {toValue}
+            {parseFloat(fromValue).toFixed(1)} -{" "}
+            {parseFloat(toValue).toFixed(1)}
           </Text>
         </View>
-        <View>
+        {/* <View>
           <RangeSlider
             min={0}
             max={5}
@@ -208,18 +209,17 @@ export default function FilterSearchScreen({ navigation }) {
             initialFromValue={fromValue}
             initialToValue={toValue}
           />
-        </View>
-
-        {/* <Slider
+        </View> */}
+        <Slider
           style={{ height: hp(35) }}
           minimumValue={0}
           maximumValue={5}
           step={0.1}
-          value={toRating}
+          value={toValue}
           minimumTrackTintColor={colors.primary}
           maximumTrackTintColor={colors.darkGrey}
-          onSlidingComplete={(value) => setToRating(value)}
-        /> */}
+          onSlidingComplete={(value) => setToValue(value)}
+        />
         <View
           style={{
             flexDirection: "row",
@@ -367,8 +367,8 @@ export default function FilterSearchScreen({ navigation }) {
         data={CATEGORY_DATA}
         renderItem={({ item }) => renderCategory(item)}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => renderHeader()}
-        ListFooterComponent={() => renderFooter()}
+        ListHeaderComponent={renderHeader()}
+        ListFooterComponent={renderFooter()}
         keyboardShouldPersistTaps="always"
       />
     </SafeAreaView>

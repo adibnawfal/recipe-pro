@@ -1,10 +1,10 @@
 import { useState, useEffect } from "react";
 import { onSnapshot } from "firebase/firestore";
 
-const useData = (ref) => {
+const useCollection = (ref) => {
   const [dataState, setDataState] = useState({
-    data: [],
-    loading: true,
+    dataCollection: [],
+    loadingCollection: true,
   });
 
   useEffect(() => {
@@ -16,8 +16,8 @@ const useData = (ref) => {
       });
 
       setDataState({
-        data: data,
-        loading: false,
+        dataCollection: data,
+        loadingCollection: false,
       });
     });
   }, []);
@@ -25,4 +25,4 @@ const useData = (ref) => {
   return dataState;
 };
 
-export { useData };
+export { useCollection };

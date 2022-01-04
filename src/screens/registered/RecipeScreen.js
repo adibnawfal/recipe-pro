@@ -1,6 +1,15 @@
 import React, { useState } from "react";
+import { db } from "../../config/Fire";
 import { getAuth } from "firebase/auth";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -17,8 +26,9 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-
 import { SectionBreak } from "../../components";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 
 export default function RecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
@@ -28,11 +38,56 @@ export default function RecipeScreen({ navigation, route }) {
   });
 
   const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const recipeRef = collection(db, "recipe");
 
-  const { item } = route.params;
+  const { recipeItem } = route.params;
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [menu, setMenu] = useState(false);
 
+  const handleFavourite = async (item) => {
+    if (!item.favourite) {
+      await updateDoc(userRef, {
+        favourite: arrayUnion({
+          id: item.id,
+        }),
+      });
+    } else {
+      await updateDoc(userRef, {
+        favourite: arrayRemove({ id: item.id }),
+      });
+    }
+  };
+
+  const convertToFraction = (item) => {
+    var gcd = function (a, b) {
+      if (b < 0.0000001) return a; // Since there is a limited precision we need to limit the value.
+
+      return gcd(b, Math.floor(a % b)); // Discard any fractions due to limitations in precision.
+    };
+
+    var fraction = item;
+    var len = fraction.toString().length - 2;
+
+    var denominator = Math.pow(10, len);
+    var numerator = fraction * denominator;
+
+    var divisor = gcd(numerator, denominator);
+
+    numerator /= divisor;
+    denominator /= divisor;
+
+    return Math.floor(numerator) + "/" + Math.floor(denominator);
+  };
+
   const renderIngredient = (item) => {
+    let value = 0;
+
+    Number.isInteger(item.value)
+      ? (value = item.value.toString())
+      : (value = convertToFraction(item.value));
+
     return (
       <View
         style={{
@@ -79,7 +134,7 @@ export default function RecipeScreen({ navigation, route }) {
             color: colors.black,
           }}
         >
-          {item.measure}
+          {value + " " + item.measure}
         </Text>
       </View>
     );
@@ -125,12 +180,17 @@ export default function RecipeScreen({ navigation, route }) {
   };
 
   const renderHeader = (item) => {
-    let rating = parseFloat(item.rating).toFixed(1);
+    const rating = parseFloat(item.rating).toFixed(1);
+    let itemLength = 0;
+
+    if (!_.isEmpty(item.ingredient)) {
+      itemLength = item.ingredient.length;
+    }
 
     return (
       <View>
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ height: hp(230) }}
         >
@@ -176,14 +236,14 @@ export default function RecipeScreen({ navigation, route }) {
                     alignItems: "center",
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
                   }}
+                  onPress={() => handleFavourite(item)}
                 >
                   <MaterialIcons
-                    name="favorite-outline"
+                    name={item.favourite ? "favorite" : "favorite-outline"}
                     size={30}
-                    color={colors.white}
+                    color={item.favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
-
                 <Menu
                   visible={menu}
                   style={styles.menuWrap}
@@ -229,6 +289,10 @@ export default function RecipeScreen({ navigation, route }) {
                     textStyle={styles.menuTxt}
                     onPress={() => {
                       setMenu(false);
+                      navigation.navigate("EditRecipe", {
+                        title: "Edit Recipe",
+                        recipeEdit: recipeData,
+                      });
                     }}
                   >
                     Edit Recipe
@@ -325,7 +389,7 @@ export default function RecipeScreen({ navigation, route }) {
                     color: colors.black,
                   }}
                 >
-                  {item.time}
+                  {item.time + " Min"}
                 </Text>
                 <Text
                   style={{
@@ -392,7 +456,7 @@ export default function RecipeScreen({ navigation, route }) {
                 color: colors.darkGrey,
               }}
             >
-              {item.ingredient.length} Items
+              {itemLength} Items
             </Text>
           </View>
         </View>
@@ -401,6 +465,12 @@ export default function RecipeScreen({ navigation, route }) {
   };
 
   const renderFooter = (item) => {
+    let stepLength = 0;
+
+    if (!_.isEmpty(item.ingredient)) {
+      stepLength = item.step.length;
+    }
+
     return (
       <View
         style={{
@@ -433,7 +503,7 @@ export default function RecipeScreen({ navigation, route }) {
               color: colors.darkGrey,
             }}
           >
-            {item.step.length} Steps
+            {stepLength} Steps
           </Text>
         </View>
         <FlatList
@@ -456,7 +526,7 @@ export default function RecipeScreen({ navigation, route }) {
           horizontal
           data={item.star}
           renderItem={({ item }) => renderStar(item)}
-          keyExtractor={(item) => item.no}
+          keyExtractor={(item) => item.id}
           keyboardShouldPersistTaps="always"
           contentContainerStyle={{
             width: "100%",
@@ -469,8 +539,18 @@ export default function RecipeScreen({ navigation, route }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
+  }
+
+  let recipeData = {};
+
+  recipeData = _.find(dataCollection, (doc) => {
+    return doc.id === recipeItem.id;
+  });
+
+  if (_.find(dataDoc.favourite, (item) => item.id === recipeData.id)) {
+    recipeData.favourite = true;
   }
 
   return (
@@ -481,11 +561,11 @@ export default function RecipeScreen({ navigation, route }) {
         translucent={true}
       />
       <FlatList
-        data={item.ingredient}
+        data={recipeData.ingredient}
         renderItem={({ item }) => renderIngredient(item)}
         keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader(item)}
-        ListFooterComponent={renderFooter(item)}
+        ListHeaderComponent={renderHeader(recipeData)}
+        ListFooterComponent={renderFooter(recipeData)}
         keyboardShouldPersistTaps="always"
       />
     </View>

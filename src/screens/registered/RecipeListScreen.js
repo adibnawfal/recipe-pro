@@ -1,5 +1,15 @@
 import React, { useState } from "react";
+import { db } from "../../config/Fire";
+import { getAuth } from "firebase/auth";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -16,6 +26,8 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { InputText } from "../../components";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 
 export default function RecipeListScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
@@ -24,7 +36,13 @@ export default function RecipeListScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const recipeRef = collection(db, "recipe");
+
   const { title, recipeData, focus } = route.params;
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [data, setData] = useState(recipeData);
   const [dataHolder, setDataHolder] = useState(recipeData);
 
@@ -42,7 +60,23 @@ export default function RecipeListScreen({ navigation, route }) {
     setData(filterData);
   };
 
+  const handleFavourite = async (item) => {
+    if (!item.favourite) {
+      await updateDoc(userRef, {
+        favourite: arrayUnion({
+          id: item.id,
+        }),
+      });
+    } else {
+      await updateDoc(userRef, {
+        favourite: arrayRemove({ id: item.id }),
+      });
+    }
+  };
+
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -51,10 +85,10 @@ export default function RecipeListScreen({ navigation, route }) {
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("Recipe", { item })}
+        onPress={() => navigation.navigate("Recipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -111,7 +145,7 @@ export default function RecipeListScreen({ navigation, route }) {
                       marginLeft: wp(5),
                     }}
                   >
-                    {item.rating}
+                    {rating}
                   </Text>
                 </View>
               </View>
@@ -131,15 +165,15 @@ export default function RecipeListScreen({ navigation, route }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => handleFavourite(item)}>
                   <MaterialIcons
-                    name="favorite-outline"
+                    name={item.favourite ? "favorite" : "favorite-outline"}
                     size={24}
-                    color={colors.white}
+                    color={item.favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
               </View>
@@ -150,9 +184,17 @@ export default function RecipeListScreen({ navigation, route }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
   }
+
+  let recipeListData = _.intersectionBy(dataCollection, data, "id");
+
+  _.forEach(recipeListData, (doc) => {
+    if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+      doc.favourite = true;
+    }
+  });
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,7 +251,7 @@ export default function RecipeListScreen({ navigation, route }) {
         </Text>
       </View>
       <FlatList
-        data={data}
+        data={recipeListData}
         renderItem={({ item }) => renderRecipe(item)}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="always"

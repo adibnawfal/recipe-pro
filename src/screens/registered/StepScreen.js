@@ -1,11 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   StyleSheet,
   StatusBar,
   View,
   Text,
   TouchableOpacity,
+  FlatList,
   Keyboard,
 } from "react-native";
 import {
@@ -14,6 +16,7 @@ import {
   Dialog,
   Button as PButton,
 } from "react-native-paper";
+import { useIsFocused } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -29,10 +32,19 @@ export default function StepScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const { title, data } = route.params;
+  const isFocused = useIsFocused();
+
+  const { title, recipeEdit, data, editData, index } = route.params;
   const [stepData, setStepData] = useState(data);
   const [txt, setTxt] = useState("");
   const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    // Call only when screen open or when back on screen
+    if (editData != null) {
+      setTxt(editData.txt);
+    }
+  }, [isFocused, editData]);
 
   const handleStep = async () => {
     if (txt != "") {
@@ -50,9 +62,79 @@ export default function StepScreen({ navigation, route }) {
     }
   };
 
+  const handleEditStep = async () => {
+    const array = [...stepData];
+
+    array[index].txt = txt;
+
+    await setStepData(array);
+    navigation.pop();
+  };
+
+  const handleDeleteStep = async () => {
+    const data = recipeEdit;
+    let count = 0;
+
+    if (index !== -1) {
+      data.step.splice(index, 1);
+    }
+
+    data.step.forEach((item) => {
+      item.id = count++;
+    });
+
+    navigation.navigate({
+      name: "EditRecipe",
+      params: { recipeEdit: data },
+      merge: true,
+    });
+  };
+
+  const renderStep = (item, index) => {
+    return (
+      <TouchableOpacity
+        style={{
+          flexDirection: "row",
+          marginBottom: hp(15),
+        }}
+        onPress={() =>
+          navigation.navigate("EditStep", {
+            title: "Edit Step",
+            recipeEdit: recipeEdit,
+            data: step,
+            editData: item,
+            index: index,
+          })
+        }
+      >
+        <View
+          style={{
+            width: wp(5),
+            height: wp(5),
+            borderRadius: wp(5) / 2,
+            marginTop: hp(6),
+            backgroundColor: colors.primary,
+          }}
+        />
+        <Text
+          style={{
+            fontFamily: "Regular",
+            fontSize: hp(12),
+            color: colors.black,
+            marginLeft: wp(15),
+          }}
+        >
+          {item.txt}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
+
   if (!fontsLoaded) {
     return <AppLoading />;
   }
+
+  let stepInputData = _.dropRight(data, data.length - index);
 
   return (
     <Provider>
@@ -119,6 +201,7 @@ export default function StepScreen({ navigation, route }) {
                   justifyContent: "center",
                   alignItems: "flex-end",
                 }}
+                onPress={() => handleDeleteStep()}
               >
                 <MaterialIcons
                   name="delete-outline"
@@ -130,6 +213,12 @@ export default function StepScreen({ navigation, route }) {
               <View style={{ width: wp(38) }} />
             )}
           </View>
+          <FlatList
+            data={stepInputData}
+            renderItem={({ item, index }) => renderStep(item, index)}
+            keyExtractor={(item) => item.id}
+            keyboardShouldPersistTaps="always"
+          />
           <View
             style={{
               flexDirection: "row",
@@ -145,6 +234,7 @@ export default function StepScreen({ navigation, route }) {
                 backgroundColor: colors.primary,
               }}
             />
+
             <Text
               style={{
                 fontFamily: "Regular",
@@ -153,16 +243,26 @@ export default function StepScreen({ navigation, route }) {
                 marginLeft: wp(15),
               }}
             >
-              Step 1
+              Step {index + 1}
             </Text>
           </View>
           <InputText
             title="Fry the chicken"
+            addStyle={{
+              height: null,
+              paddingVertical: hp(15),
+            }}
             value={txt}
-            onChangeText={(txt) => setStep(txt)}
+            onChangeText={(txt) => setTxt(txt)}
+            multiline={true}
           />
         </View>
-        <Button title={title} onPress={() => handleStep()} />
+        <Button
+          title={title}
+          onPress={() => {
+            title === "Edit Step" ? handleEditStep() : handleStep();
+          }}
+        />
       </SafeAreaView>
     </Provider>
   );

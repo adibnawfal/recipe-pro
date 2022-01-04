@@ -1,15 +1,15 @@
 import * as ImagePicker from "expo-image-picker";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../../config/Fire";
 import { getAuth } from "firebase/auth";
 import {
   doc,
   collection,
   addDoc,
-  getDoc,
   updateDoc,
   arrayUnion,
 } from "firebase/firestore";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import AppLoading from "expo-app-loading";
 import {
   ImageBackground,
@@ -18,9 +18,11 @@ import {
   View,
   Text,
   TouchableOpacity,
+  TextInput,
   FlatList,
   Keyboard,
 } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { Menu, MenuItem } from "react-native-material-menu";
 import {
   Provider,
@@ -31,29 +33,39 @@ import {
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
+import uuid from "react-native-uuid";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { Button, InputText, SectionBreak } from "../../components";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 import { CUISINETYPE_DATA } from "../../data/CUISINETYPE_DATA";
 import { DIFFICULTY_DATA } from "../../data/DIFFICULTY_DATA";
 
-import { useIsFocused } from "@react-navigation/native";
-
-export default function AddRecipeScreen({ navigation }) {
+export default function AddRecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const auth = getAuth();
+  const storage = getStorage();
+  const userRef = doc(db, "users", auth.currentUser.uid);
+  const recipeRef = collection(db, "recipe");
+  const isFocused = useIsFocused();
+
+  const { title, recipeEdit } = route.params;
+  const { loadingDoc, dataDoc } = useDoc(userRef);
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [menu, setMenu] = useState(false);
   const [image, setImage] = useState(null);
   const [recipeName, setRecipeName] = useState("");
   const [category, setCategory] = useState(null);
   const [cuisineType, setCuisineType] = useState(null);
-  const [time, setTime] = useState(0);
+  const [time, setTime] = useState("");
   const [day, setDay] = useState(0);
   const [hour, setHour] = useState(0);
   const [minute, setMinute] = useState(0);
@@ -66,21 +78,32 @@ export default function AddRecipeScreen({ navigation }) {
   const [visibleDifficulty, setVisibleDifficulty] = useState(false);
   const [visible, setVisible] = useState(false);
 
-  const auth = getAuth();
-  const isFocused = useIsFocused();
+  useEffect(() => {
+    // Call only when screen open or when back on screen
+    if (recipeEdit != null) {
+      setImage(recipeEdit.image);
+      setRecipeName(recipeEdit.title);
+      setCategory(recipeEdit.category);
+      setCuisineType(recipeEdit.cuisineType);
+      setTime(recipeEdit.time);
+      setDifficulty(recipeEdit.difficulty);
+      setIngredient(recipeEdit.ingredient);
+      setStep(recipeEdit.step);
+    }
+  }, [isFocused, recipeEdit]);
 
-  // useEffect(() => {
-  //   // Call only when screen open or when back on screen
-  //   console.log(ingredient);
-  // }, [isFocused]);
-
-  // const handleAddRecipe = () = {
-  //   if (category) {
-
-  //   } else {
-
-  //   }
-  // }
+  const handleClearContent = () => {
+    setImage(null);
+    setRecipeName("");
+    setCategory(null);
+    setCuisineType(null);
+    setTime("");
+    setDifficulty(null);
+    setIngredient([]);
+    setStep([]);
+    Keyboard.dismiss();
+    setMenu(false);
+  };
 
   const handleAddRecipe = async () => {
     if (
@@ -88,46 +111,81 @@ export default function AddRecipeScreen({ navigation }) {
       recipeName != "" &&
       category != null &&
       cuisineType != null &&
-      time != null &&
+      time != "" &&
       difficulty != null &&
       ingredient.length != 0 &&
       step.length != 0
     ) {
-      const docRef = doc(db, "users", auth.currentUser.uid);
-      const docSnap = await getDoc(docRef);
+      const uploadUrl = await uploadImageAsync(image);
+      const docRef = await addDoc(recipeRef, {
+        userId: auth.currentUser.uid,
+        userName: dataDoc.fullName,
+        title: recipeName,
+        image: uploadUrl,
+        category: category,
+        cuisineType: cuisineType,
+        time: time,
+        difficulty: difficulty,
+        rating: 5,
+        ratingCount: 0,
+        ingredient: ingredient,
+        step: step,
+        star: [
+          { id: 0, bool: false },
+          { id: 1, bool: false },
+          { id: 2, bool: false },
+          { id: 3, bool: false },
+          { id: 4, bool: false },
+        ],
+      });
 
-      if (docSnap.exists()) {
-        console.log("inside");
-        const newDocRef = await addDoc(collection(db, "recipe"), {
-          id: 0,
-          userId: auth.currentUser.uid,
-          userName: docSnap.data().fullName,
-          title: recipeName,
-          image: null,
-          category: category,
-          cuisineType: cuisineType,
-          time: time,
-          difficulty: difficulty,
-          rating: 0,
-          ingredient: ingredient,
-          step: step,
-        });
-
-        await updateDoc(doc(db, "users", auth.currentUser.uid), {
-          myRecipe: arrayUnion({
-            id: 0,
-            recipeId: newDocRef.id,
-          }),
-        });
-      } else {
-        console.log("No such document!");
-      }
+      await updateDoc(userRef, {
+        myRecipe: arrayUnion({
+          id: docRef.id,
+        }),
+      }).then(() => {
+        setImage(null);
+        setRecipeName("");
+        setCategory(null);
+        setCuisineType(null);
+        setTime("");
+        setDifficulty(null);
+        setIngredient([]);
+        setStep([]);
+        navigation.navigate("HomeMain");
+      });
 
       Keyboard.dismiss();
     } else {
       Keyboard.dismiss();
       setVisible(true);
     }
+  };
+
+  const uploadImageAsync = async (uri) => {
+    // Why are we using XMLHttpRequest? See:
+    // https://github.com/expo/expo/issues/2402#issuecomment-443726662
+    const blob = await new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.onload = function () {
+        resolve(xhr.response);
+      };
+      xhr.onerror = function (e) {
+        console.log(e);
+        reject(new TypeError("Network request failed"));
+      };
+      xhr.responseType = "blob";
+      xhr.open("GET", uri, true);
+      xhr.send(null);
+    });
+
+    const storageRef = ref(storage, "images/" + uuid.v4() + ".jpg");
+    await uploadBytes(storageRef, blob);
+
+    // We're done with the blob, close and release it
+    blob.close();
+
+    return await getDownloadURL(storageRef);
   };
 
   const handleTime = () => {
@@ -142,8 +200,6 @@ export default function AddRecipeScreen({ navigation }) {
       aspect: [36, 23],
       quality: 1,
     });
-
-    console.log(result);
 
     if (!result.cancelled) {
       setImage(result.uri);
@@ -240,15 +296,51 @@ export default function AddRecipeScreen({ navigation }) {
     );
   };
 
-  const renderIngredient = (item) => {
+  const convertToFraction = (item) => {
+    var gcd = function (a, b) {
+      if (b < 0.0000001) return a; // Since there is a limited precision we need to limit the value.
+
+      return gcd(b, Math.floor(a % b)); // Discard any fractions due to limitations in precision.
+    };
+
+    var fraction = item;
+    var len = fraction.toString().length - 2;
+
+    var denominator = Math.pow(10, len);
+    var numerator = fraction * denominator;
+
+    var divisor = gcd(numerator, denominator);
+
+    numerator /= divisor;
+    denominator /= divisor;
+
+    return Math.floor(numerator) + "/" + Math.floor(denominator);
+  };
+
+  const renderIngredient = (item, index) => {
+    let value;
+
+    Number.isInteger(item.value)
+      ? (value = item.value.toString())
+      : (value = convertToFraction(item.value));
+
     return (
-      <View
+      <TouchableOpacity
         style={{
           flexDirection: "row",
           justifyContent: "space-between",
           alignItems: "center",
           marginBottom: hp(15),
         }}
+        onPress={() =>
+          navigation.navigate("EditIngredient", {
+            title: "Edit Ingredient",
+            recipeEdit: recipeEdit,
+            data: ingredient,
+            editData: item,
+            index: index,
+          })
+        }
       >
         <View
           style={{
@@ -286,19 +378,28 @@ export default function AddRecipeScreen({ navigation }) {
             color: colors.black,
           }}
         >
-          {item.value + " " + item.measure}
+          {value + " " + item.measure}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
-  const renderStep = (item) => {
+  const renderStep = (item, index) => {
     return (
-      <View
+      <TouchableOpacity
         style={{
           flexDirection: "row",
           marginBottom: hp(15),
         }}
+        onPress={() =>
+          navigation.navigate("EditStep", {
+            title: "Edit Step",
+            recipeEdit: recipeEdit,
+            data: step,
+            editData: item,
+            index: index,
+          })
+        }
       >
         <View
           style={{
@@ -317,9 +418,9 @@ export default function AddRecipeScreen({ navigation }) {
             marginLeft: wp(15),
           }}
         >
-          {item.step}
+          {item.txt}
         </Text>
-      </View>
+      </TouchableOpacity>
     );
   };
 
@@ -339,7 +440,27 @@ export default function AddRecipeScreen({ navigation }) {
               ]}
             >
               <View style={styles.headerWrap}>
-                <View style={{ width: wp(38) }} />
+                {title === "Edit Recipe" ? (
+                  <TouchableOpacity
+                    style={[
+                      styles.menuBtn,
+                      {
+                        backgroundColor: image
+                          ? "rgba(0, 0, 0, 0.5)"
+                          : "rgba(0, 0, 0, 0.3)",
+                      },
+                    ]}
+                    onPress={() => navigation.pop()}
+                  >
+                    <MaterialIcons
+                      name="arrow-back"
+                      size={30}
+                      color={colors.white}
+                    />
+                  </TouchableOpacity>
+                ) : (
+                  <View style={{ width: wp(38) }} />
+                )}
                 <Menu
                   visible={menu}
                   style={styles.menuWrap}
@@ -366,7 +487,7 @@ export default function AddRecipeScreen({ navigation }) {
                 >
                   <MenuItem
                     textStyle={styles.menuTxt}
-                    onPress={() => setMenu(false)}
+                    onPress={() => handleClearContent()}
                   >
                     Clear Content
                   </MenuItem>
@@ -440,13 +561,42 @@ export default function AddRecipeScreen({ navigation }) {
           <View style={styles.timeDifficultyWrap}>
             <View style={{ width: wp(145) }}>
               <Text style={styles.timeTxt}>Time</Text>
-              <TouchableOpacity
+              <View style={styles.timeBtn}>
+                <MaterialIcons
+                  name="timer"
+                  size={24}
+                  color={time != "" ? colors.black : colors.darkGrey}
+                />
+                <TextInput
+                  placeholder="0"
+                  placeholderTextColor={colors.darkGrey}
+                  keyboardType="numeric"
+                  style={{
+                    fontFamily: "Regular",
+                    fontSize: hp(12),
+                    color: colors.black,
+                  }}
+                  textAlign="center"
+                  value={time}
+                  onChangeText={(time) => setTime(time)}
+                />
+                <Text
+                  style={{
+                    fontFamily: "Regular",
+                    fontSize: hp(12),
+                    color: time != "" ? colors.black : colors.darkGrey,
+                  }}
+                >
+                  Min
+                </Text>
+              </View>
+              {/* <TouchableOpacity
                 style={styles.timeBtn}
                 onPress={() => setVisibleTime(true)}
               >
                 <MaterialIcons name="timer" size={24} color={colors.darkGrey} />
                 <Text style={styles.timeBtnTxt}>{time} Min</Text>
-              </TouchableOpacity>
+              </TouchableOpacity> */}
             </View>
             <View style={{ width: wp(145) }}>
               <Text style={styles.timeTxt}>Difficulty</Text>
@@ -483,7 +633,7 @@ export default function AddRecipeScreen({ navigation }) {
           {ingredient.length > 0 ? (
             <FlatList
               data={ingredient}
-              renderItem={({ item }) => renderIngredient(item)}
+              renderItem={({ item, index }) => renderIngredient(item, index)}
               keyExtractor={(item) => item.id}
               keyboardShouldPersistTaps="always"
             />
@@ -518,7 +668,7 @@ export default function AddRecipeScreen({ navigation }) {
         {step.length > 0 ? (
           <FlatList
             data={step}
-            renderItem={({ item }) => renderStep(item)}
+            renderItem={({ item, index }) => renderStep(item, index)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
           />
@@ -531,6 +681,7 @@ export default function AddRecipeScreen({ navigation }) {
               navigation.navigate("Step", {
                 title: "Add Step",
                 data: step,
+                index: step.length,
               })
             }
           >
@@ -546,7 +697,7 @@ export default function AddRecipeScreen({ navigation }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
   }
 
@@ -752,10 +903,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
   },
   menuWrap: {
-    left: null,
-    right: 0,
     width: wp(160),
-    marginRight: wp(15),
     backgroundColor: colors.white,
   },
   menuBtn: {

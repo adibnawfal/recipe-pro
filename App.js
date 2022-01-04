@@ -91,9 +91,12 @@ const tabHide = ({ navigation, route }) => {
       "FilterSearch",
       "TrendingRecipe",
       "Recipe",
+      "EditRecipe",
       "RecipeList",
       "Ingredient",
+      "EditIngredient",
       "Step",
+      "EditStep",
       "EditProfile",
       "ChangePassword",
     ];
@@ -135,6 +138,21 @@ function HomeNavigator({ navigation, route }) {
         options={stackOption}
       />
       <StackHome.Screen
+        name="EditRecipe"
+        component={AddRecipeScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditIngredient"
+        component={IngredientScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditStep"
+        component={StepScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
         name="RecipeList"
         component={RecipeListScreen}
         options={stackOption}
@@ -154,6 +172,7 @@ function AddRecipeNavigator({ navigation, route }) {
         name="AddRecipeMain"
         component={AddRecipeScreen}
         options={stackOption}
+        initialParams={{ title: null, recipeData: null }}
       />
       <StackAddRecipe.Screen
         name="Ingredient"
@@ -161,7 +180,17 @@ function AddRecipeNavigator({ navigation, route }) {
         options={stackOption}
       />
       <StackAddRecipe.Screen
+        name="EditIngredient"
+        component={IngredientScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
         name="Step"
+        component={StepScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditStep"
         component={StepScreen}
         options={stackOption}
       />
@@ -186,6 +215,21 @@ function FavouriteNavigator({ navigation, route }) {
         component={RecipeScreen}
         options={stackOption}
       />
+      <StackHome.Screen
+        name="EditRecipe"
+        component={AddRecipeScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditIngredient"
+        component={IngredientScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditStep"
+        component={StepScreen}
+        options={stackOption}
+      />
     </StackFavourite.Navigator>
   );
 }
@@ -205,6 +249,21 @@ function ProfileNavigator({ navigation, route }) {
       <StackHome.Screen
         name="Recipe"
         component={RecipeScreen}
+        options={stackOption}
+      />
+      <StackHome.Screen
+        name="EditRecipe"
+        component={AddRecipeScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditIngredient"
+        component={IngredientScreen}
+        options={stackOption}
+      />
+      <StackAddRecipe.Screen
+        name="EditStep"
+        component={StepScreen}
         options={stackOption}
       />
       <StackHome.Screen

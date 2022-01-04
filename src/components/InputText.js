@@ -14,6 +14,7 @@ export default function InputText({
   value,
   onChangeText,
   focus = false,
+  multiline = false,
 }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../assets/fonts/OpenSans-Regular.ttf"),
@@ -38,16 +39,20 @@ export default function InputText({
         />
       ) : null}
       <TextInput
+        multiline={multiline}
         autoFocus={focus}
         placeholder={title}
         placeholderTextColor={colors.darkGrey}
-        keyboardType={title === "Email Address" ? "email-address" : "default"}
+        keyboardType={
+          (title === "Email Address" ? "email-address" : "default",
+          title === "0.00" ? "numeric" : "default")
+        }
         secureTextEntry={
           title === "Password" || title === "Confirm Password" ? secure : false
         }
         autoCapitalize="none"
         style={styles.inputTxt}
-        value={value}
+        value={value == 0 ? null : value}
         onChangeText={onChangeText}
       />
       {title === "Password" || title === "Confirm Password" ? (
@@ -89,6 +94,6 @@ const styles = StyleSheet.create({
     fontFamily: "Regular",
     fontSize: hp(12),
     color: colors.black,
-    marginLeft: wp(27),
+    marginHorizontal: wp(27),
   },
 });
