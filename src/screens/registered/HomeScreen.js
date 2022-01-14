@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -39,11 +40,29 @@ export default function HomeScreen({ navigation }) {
   const auth = getAuth();
   const userRef = doc(db, "users", auth.currentUser.uid);
   const recipeRef = collection(db, "recipe");
+  const isFocused = useIsFocused();
 
   const { loadingDoc, dataDoc } = useDoc(userRef);
   const { loadingCollection, dataCollection } = useCollection(recipeRef);
+  const [trendingData, setTrendingData] = useState([]);
 
-  const handleFavourite = async (item) => {
+  useEffect(() => {
+    let tempData = [];
+
+    tempData = _.filter(dataCollection, (doc) => {
+      return doc.rating > 4.5;
+    });
+
+    _.forEach(tempData, (doc) => {
+      if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+        doc.favourite = true;
+      }
+    });
+
+    setTrendingData(tempData);
+  }, [isFocused, dataCollection, dataDoc, dataDoc.favourite]);
+
+  const handleFavourite = async (item, index) => {
     if (!item.favourite) {
       await updateDoc(userRef, {
         favourite: arrayUnion({
@@ -54,10 +73,18 @@ export default function HomeScreen({ navigation }) {
       await updateDoc(userRef, {
         favourite: arrayRemove({ id: item.id }),
       });
+
+      var array = _.forEach(trendingData, (doc) => {
+        if (doc.id === item.id) {
+          doc.favourite = !doc.favourite;
+        }
+      });
+
+      setTrendingData(array);
     }
   };
 
-  const renderRecipe = (item) => {
+  const renderRecipe = (item, index) => {
     const rating = parseFloat(item.rating).toFixed(1);
 
     return (
@@ -142,7 +169,7 @@ export default function HomeScreen({ navigation }) {
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity onPress={() => handleFavourite(item)}>
+                <TouchableOpacity onPress={() => handleFavourite(item, index)}>
                   <MaterialIcons
                     name={item.favourite ? "favorite" : "favorite-outline"}
                     size={24}
@@ -159,7 +186,7 @@ export default function HomeScreen({ navigation }) {
 
   const renderCategory = (item) => {
     let categoryData = _.filter(dataCollection, (doc) => {
-      return doc.category === item.title;
+      return doc.category === item.category;
     });
 
     _.forEach(categoryData, (doc) => {
@@ -178,7 +205,7 @@ export default function HomeScreen({ navigation }) {
         }}
         onPress={() =>
           navigation.navigate("RecipeList", {
-            title: item.title,
+            title: item.category,
             recipeData: categoryData,
           })
         }
@@ -205,7 +232,7 @@ export default function HomeScreen({ navigation }) {
                 color: colors.white,
               }}
             >
-              {item.title}
+              {item.category}
             </Text>
           </View>
         </ImageBackground>
@@ -214,16 +241,6 @@ export default function HomeScreen({ navigation }) {
   };
 
   const renderHeader = () => {
-    let trendingData = _.filter(dataCollection, (doc) => {
-      return doc.rating > 4.5;
-    });
-
-    _.forEach(trendingData, (doc) => {
-      if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
-        doc.favourite = true;
-      }
-    });
-
     const firstName = _.split(dataDoc.fullName, " ", 1);
 
     return (
@@ -360,7 +377,7 @@ export default function HomeScreen({ navigation }) {
           <FlatList
             horizontal
             data={trendingData}
-            renderItem={({ item }) => renderRecipe(item)}
+            renderItem={({ item, index }) => renderRecipe(item, index)}
             keyExtractor={(item) => item.id}
             keyboardShouldPersistTaps="always"
             style={styles.cardWrap}

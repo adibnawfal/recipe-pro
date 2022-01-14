@@ -247,6 +247,7 @@ export default function FavouriteScreen({ navigation }) {
         title="Search Recipe"
         addStyle={{ marginVertical: hp(25) }}
         onChangeText={(text) => searchFilter(text)}
+        navigation={navigation}
       />
       <View
         style={{

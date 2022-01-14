@@ -1,5 +1,14 @@
 import React, { useState } from "react";
+import { db } from "../../config/Fire";
+import {
+  doc,
+  collection,
+  updateDoc,
+  arrayUnion,
+  arrayRemove,
+} from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -16,6 +25,8 @@ import { useFonts } from "expo-font";
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { InputText } from "../../components";
+import { useDoc } from "../../data/useDoc";
+import { useCollection } from "../../data/useCollection";
 
 export default function GuestRecipeListScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
@@ -24,7 +35,10 @@ export default function GuestRecipeListScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
+  const recipeRef = collection(db, "recipe");
+
   const { title, recipeData, focus } = route.params;
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [data, setData] = useState(recipeData);
   const [dataHolder, setDataHolder] = useState(recipeData);
 
@@ -43,6 +57,8 @@ export default function GuestRecipeListScreen({ navigation, route }) {
   };
 
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -51,10 +67,10 @@ export default function GuestRecipeListScreen({ navigation, route }) {
           marginBottom: hp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("GuestRecipe", { item })}
+        onPress={() => navigation.navigate("GuestRecipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -111,7 +127,7 @@ export default function GuestRecipeListScreen({ navigation, route }) {
                       marginLeft: wp(5),
                     }}
                   >
-                    {item.rating}
+                    {rating}
                   </Text>
                 </View>
               </View>
@@ -131,17 +147,10 @@ export default function GuestRecipeListScreen({ navigation, route }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
-                <TouchableOpacity>
-                  <MaterialIcons
-                    name="favorite-outline"
-                    size={24}
-                    color={colors.white}
-                  />
-                </TouchableOpacity>
               </View>
             </View>
           </View>
@@ -150,9 +159,11 @@ export default function GuestRecipeListScreen({ navigation, route }) {
     );
   };
 
-  if (!fontsLoaded) {
+  if (!fontsLoaded || loadingCollection) {
     return <AppLoading />;
   }
+
+  let recipeListData = _.intersectionBy(dataCollection, data, "id");
 
   return (
     <SafeAreaView style={styles.container}>
@@ -209,7 +220,7 @@ export default function GuestRecipeListScreen({ navigation, route }) {
         </Text>
       </View>
       <FlatList
-        data={data}
+        data={recipeListData}
         renderItem={({ item }) => renderRecipe(item)}
         keyExtractor={(item) => item.id}
         keyboardShouldPersistTaps="always"

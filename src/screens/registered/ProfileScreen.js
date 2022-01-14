@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { db } from "../../config/Fire";
-import { getAuth, signOut } from "firebase/auth";
+import { getAuth, signOut, deleteUser } from "firebase/auth";
 import {
   doc,
   collection,
@@ -19,6 +19,12 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import {
+  Provider,
+  Portal,
+  Dialog,
+  Button as PButton,
+} from "react-native-paper";
 import { Menu, MenuItem, MenuDivider } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -42,7 +48,18 @@ export default function ProfileScreen({ navigation }) {
 
   const { loadingDoc, dataDoc } = useDoc(userRef);
   const { loadingCollection, dataCollection } = useCollection(recipeRef);
+  const [visible, setVisible] = useState(false);
   const [menu, setMenu] = useState(false);
+
+  const handleDeleteAccount = () => {
+    deleteUser(auth.currentUser)
+      .then(() => {
+        console.log("User Deleted");
+      })
+      .catch((error) => {
+        console.log(error);
+      });
+  };
 
   const handleSignOut = () => {
     signOut(auth)
@@ -221,7 +238,13 @@ export default function ProfileScreen({ navigation }) {
               Change Password
             </MenuItem>
             <MenuDivider />
-            <MenuItem textStyle={styles.menuTxt} onPress={() => setMenu(false)}>
+            <MenuItem
+              textStyle={styles.menuTxt}
+              onPress={() => {
+                setMenu(false);
+                setVisible(true);
+              }}
+            >
               Delete Account
             </MenuItem>
           </Menu>
@@ -340,17 +363,73 @@ export default function ProfileScreen({ navigation }) {
   });
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
-      <StatusBar
-        barStyle="dark-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <FlatList
-        ListHeaderComponent={renderHeader()}
-        keyboardShouldPersistTaps="always"
-      />
-    </SafeAreaView>
+    <Provider>
+      <SafeAreaView style={{ flex: 1, backgroundColor: colors.white }}>
+        <StatusBar
+          barStyle="dark-content"
+          backgroundColor="transparent"
+          translucent={true}
+        />
+        <Portal>
+          <Dialog
+            visible={visible}
+            onDismiss={() => setVisible(false)}
+            style={{ borderRadius: wp(10), backgroundColor: colors.white }}
+          >
+            <Dialog.Title style={styles.dialogTitleTxt}>
+              Delete Account
+            </Dialog.Title>
+            <Dialog.Content
+              style={{ paddingHorizontal: wp(20), alignItems: "center" }}
+            >
+              <Text style={styles.dialogParaTxt}>
+                Are you sure you want to delete your account? This will
+                permanently erase your account.
+              </Text>
+            </Dialog.Content>
+            <Dialog.Actions
+              style={{
+                justifyContent: "space-between",
+                paddingHorizontal: wp(20),
+                paddingBottom: hp(15),
+              }}
+            >
+              <PButton
+                uppercase={false}
+                color={colors.black}
+                labelStyle={styles.dialogBtnTxt}
+                style={{
+                  width: wp(70),
+                }}
+                onPress={() => setVisible(false)}
+              >
+                Cancel
+              </PButton>
+              <PButton
+                uppercase={false}
+                color={colors.red}
+                labelStyle={[styles.dialogBtnTxt, { color: colors.white }]}
+                style={{
+                  width: wp(70),
+                  borderRadius: wp(5),
+                  backgroundColor: colors.red,
+                }}
+                onPress={() => {
+                  handleDeleteAccount();
+                  setVisible(false);
+                }}
+              >
+                Delete
+              </PButton>
+            </Dialog.Actions>
+          </Dialog>
+        </Portal>
+        <FlatList
+          ListHeaderComponent={renderHeader()}
+          keyboardShouldPersistTaps="always"
+        />
+      </SafeAreaView>
+    </Provider>
   );
 }
 
@@ -397,5 +476,22 @@ const styles = StyleSheet.create({
   cardWrap: {
     overflow: "hidden",
     marginTop: hp(15),
+  },
+  dialogTitleTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(14),
+    color: colors.black,
+    textAlign: "center",
+  },
+  dialogParaTxt: {
+    fontFamily: "Regular",
+    fontSize: hp(12),
+    color: colors.darkGrey,
+    textAlign: "center",
+  },
+  dialogBtnTxt: {
+    fontFamily: "Bold",
+    fontSize: hp(12),
+    color: colors.black,
   },
 });

@@ -1,51 +1,63 @@
 const CUISINETYPE_DATA = [
   {
     id: 0,
-    title: "Malaysian",
+    cuisineType: "Malaysian",
+    value: false,
   },
   {
     id: 1,
-    title: "Indonesian",
+    cuisineType: "Indonesian",
+    value: false,
   },
   {
     id: 2,
-    title: "American",
+    cuisineType: "American",
+    value: false,
   },
   {
     id: 3,
-    title: "Chinese",
+    cuisineType: "Chinese",
+    value: false,
   },
   {
     id: 4,
-    title: "French",
+    cuisineType: "French",
+    value: false,
   },
   {
     id: 5,
-    title: "Italian",
+    cuisineType: "Italian",
+    value: false,
   },
   {
     id: 6,
-    title: "Indian",
+    cuisineType: "Indian",
+    value: false,
   },
   {
     id: 7,
-    title: "Japanese",
+    cuisineType: "Japanese",
+    value: false,
   },
   {
     id: 8,
-    title: "Korean",
+    cuisineType: "Korean",
+    value: false,
   },
   {
     id: 9,
-    title: "Mexican",
+    cuisineType: "Mexican",
+    value: false,
   },
   {
     id: 10,
-    title: "Thai",
+    cuisineType: "Thai",
+    value: false,
   },
   {
     id: 11,
-    title: "Other Cuisine",
+    cuisineType: "Other Cuisine",
+    value: false,
   },
 ];
 

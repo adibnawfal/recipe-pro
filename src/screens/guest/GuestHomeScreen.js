@@ -1,4 +1,6 @@
 import React from "react";
+import { db } from "../../config/Fire";
+import { collection } from "firebase/firestore";
 import AppLoading from "expo-app-loading";
 import _ from "lodash";
 import {
@@ -16,8 +18,7 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-import { InputText } from "../../components";
-import { RECIPE_DATA } from "../../data/RECIPE_DATA";
+import { useCollection } from "../../data/useCollection";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 
 export default function GuestHomeScreen({ navigation }) {
@@ -27,11 +28,13 @@ export default function GuestHomeScreen({ navigation }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
+  const recipeRef = collection(db, "recipe");
+
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
 
   const renderRecipe = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+
     return (
       <TouchableOpacity
         style={{
@@ -41,10 +44,10 @@ export default function GuestHomeScreen({ navigation }) {
           marginRight: wp(15),
           backgroundColor: colors.lightGrey,
         }}
-        onPress={() => navigation.navigate("GuestRecipe", { item })}
+        onPress={() => navigation.navigate("GuestRecipe", { recipeItem: item })}
       >
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ flex: 1 }}
           imageStyle={{ borderRadius: wp(10) }}
@@ -80,7 +83,7 @@ export default function GuestHomeScreen({ navigation }) {
                   marginLeft: wp(5),
                 }}
               >
-                {item.rating}
+                {rating}
               </Text>
             </View>
             <View>
@@ -104,7 +107,7 @@ export default function GuestHomeScreen({ navigation }) {
                     color: colors.white,
                   }}
                 >
-                  <Text>{item.time}</Text>
+                  <Text>{item.time + " Min"}</Text>
                   <Text> | </Text>
                   <Text>{item.difficulty}</Text>
                 </Text>
@@ -117,7 +120,9 @@ export default function GuestHomeScreen({ navigation }) {
   };
 
   const renderCategory = (item) => {
-    let categoryData = _.filter(RECIPE_DATA, { category: item.title });
+    let categoryData = _.filter(dataCollection, (doc) => {
+      return doc.category === item.category;
+    });
 
     return (
       <TouchableOpacity
@@ -129,7 +134,7 @@ export default function GuestHomeScreen({ navigation }) {
         }}
         onPress={() =>
           navigation.navigate("GuestRecipeList", {
-            title: item.title,
+            title: item.category,
             recipeData: categoryData,
           })
         }
@@ -156,7 +161,7 @@ export default function GuestHomeScreen({ navigation }) {
                 color: colors.white,
               }}
             >
-              {item.title}
+              {item.category}
             </Text>
           </View>
         </ImageBackground>
@@ -165,8 +170,8 @@ export default function GuestHomeScreen({ navigation }) {
   };
 
   const renderHeader = () => {
-    let trendingData = _.filter(RECIPE_DATA, (item) => {
-      return item.rating > 4.5;
+    let trendingData = _.filter(dataCollection, (doc) => {
+      return doc.rating > 4.5;
     });
 
     return (
@@ -199,7 +204,7 @@ export default function GuestHomeScreen({ navigation }) {
           onPress={() =>
             navigation.navigate("GuestRecipeList", {
               title: "Search Results",
-              recipeData: RECIPE_DATA,
+              recipeData: dataCollection,
               focus: true,
             })
           }
@@ -221,7 +226,9 @@ export default function GuestHomeScreen({ navigation }) {
           >
             Search Recipe
           </Text>
-          <TouchableOpacity onPress={() => navigation.navigate("FilterSearch")}>
+          <TouchableOpacity
+            onPress={() => navigation.navigate("GuestFilterSearch")}
+          >
             <MaterialIcons
               name="filter-list"
               size={24}
@@ -285,6 +292,10 @@ export default function GuestHomeScreen({ navigation }) {
       </View>
     );
   };
+
+  if (!fontsLoaded || loadingCollection) {
+    return <AppLoading />;
+  }
 
   return (
     <SafeAreaView style={styles.container}>

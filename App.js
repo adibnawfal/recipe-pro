@@ -23,6 +23,7 @@ import {
   GuestHomeScreen,
   GuestRecipeScreen,
   GuestRecipeListScreen,
+  GuestFilterSearchScreen,
 } from "./src/screens/guest";
 import {
   HomeScreen,
@@ -42,7 +43,7 @@ import { hp } from "./src/config/dimensions";
 
 import fixtimerbug from "./src/config/fixtimerbug";
 
-//LogBox.ignoreAllLogs();
+LogBox.ignoreAllLogs();
 //LogBox.ignoreLogs([`Setting a timer for a long period`])
 LogBox.ignoreLogs([`AsyncStorage has been extracted from react-native core`]);
 
@@ -335,8 +336,8 @@ function GuestUserNavigator() {
         options={stackOption}
       />
       <StackHome.Screen
-        name="FilterSearch"
-        component={FilterSearchScreen}
+        name="GuestFilterSearch"
+        component={GuestFilterSearchScreen}
         options={stackOption}
       />
     </StackGuest.Navigator>

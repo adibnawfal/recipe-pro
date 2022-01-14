@@ -30,7 +30,6 @@ import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
 import { Button, InputText } from "../../components";
 import { useDoc } from "../../data/useDoc";
-import { set } from "lodash";
 
 export default function EditProfileScreen({ navigation }) {
   let [fontsLoaded] = useFonts({

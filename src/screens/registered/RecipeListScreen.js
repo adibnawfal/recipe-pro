@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { db } from "../../config/Fire";
 import { getAuth } from "firebase/auth";
 import {
@@ -19,6 +19,7 @@ import {
   TouchableOpacity,
   FlatList,
 } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useFonts } from "expo-font";
@@ -39,12 +40,28 @@ export default function RecipeListScreen({ navigation, route }) {
   const auth = getAuth();
   const userRef = doc(db, "users", auth.currentUser.uid);
   const recipeRef = collection(db, "recipe");
+  const isFocused = useIsFocused();
 
   const { title, recipeData, focus } = route.params;
   const { loadingDoc, dataDoc } = useDoc(userRef);
   const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [data, setData] = useState(recipeData);
   const [dataHolder, setDataHolder] = useState(recipeData);
+  const [recipeListData, setRecipeListData] = useState(recipeData);
+
+  useEffect(() => {
+    let tempData = [];
+
+    tempData = _.intersectionBy(dataCollection, data, "id");
+
+    _.forEach(tempData, (doc) => {
+      if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
+        doc.favourite = true;
+      }
+    });
+
+    setRecipeListData(tempData);
+  }, [isFocused, dataCollection, dataDoc, dataDoc.favourite]);
 
   const searchFilter = (text) => {
     const filterData = dataHolder.filter((item) => {
@@ -71,6 +88,14 @@ export default function RecipeListScreen({ navigation, route }) {
       await updateDoc(userRef, {
         favourite: arrayRemove({ id: item.id }),
       });
+
+      var array = _.forEach(recipeListData, (doc) => {
+        if (doc.id === item.id) {
+          doc.favourite = !doc.favourite;
+        }
+      });
+
+      setRecipeListData(array);
     }
   };
 
@@ -187,14 +212,6 @@ export default function RecipeListScreen({ navigation, route }) {
   if (!fontsLoaded || loadingDoc || loadingCollection) {
     return <AppLoading />;
   }
-
-  let recipeListData = _.intersectionBy(dataCollection, data, "id");
-
-  _.forEach(recipeListData, (doc) => {
-    if (_.find(dataDoc.favourite, (item) => item.id === doc.id)) {
-      doc.favourite = true;
-    }
-  });
 
   return (
     <SafeAreaView style={styles.container}>

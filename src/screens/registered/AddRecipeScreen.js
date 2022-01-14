@@ -62,6 +62,7 @@ export default function AddRecipeScreen({ navigation, route }) {
   const { loadingCollection, dataCollection } = useCollection(recipeRef);
   const [menu, setMenu] = useState(false);
   const [image, setImage] = useState(null);
+  const [imageChange, setImageChange] = useState(false);
   const [recipeName, setRecipeName] = useState("");
   const [category, setCategory] = useState(null);
   const [cuisineType, setCuisineType] = useState(null);
@@ -91,6 +92,39 @@ export default function AddRecipeScreen({ navigation, route }) {
       setStep(recipeEdit.step);
     }
   }, [isFocused, recipeEdit]);
+
+  const handleEditRecipe = async () => {
+    const uploadUrl = imageChange ? await uploadImageAsync(image) : null;
+
+    if (imageChange) {
+      await updateDoc(doc(db, "recipe", recipeEdit.id), {
+        image: uploadUrl,
+      });
+    }
+
+    await updateDoc(doc(db, "recipe", recipeEdit.id), {
+      title: recipeName,
+      category: category,
+      cuisineType: cuisineType,
+      time: time,
+      difficulty: difficulty,
+      rating: 5,
+      ratingCount: 0,
+      ingredient: ingredient,
+      step: step,
+    }).then(() => {
+      setImage(null);
+      setRecipeName("");
+      setCategory(null);
+      setCuisineType(null);
+      setTime("");
+      setDifficulty(null);
+      setIngredient([]);
+      setStep([]);
+      Keyboard.dismiss();
+      navigation.pop();
+    });
+  };
 
   const handleClearContent = () => {
     setImage(null);
@@ -152,6 +186,7 @@ export default function AddRecipeScreen({ navigation, route }) {
         setDifficulty(null);
         setIngredient([]);
         setStep([]);
+        Keyboard.dismiss();
         navigation.navigate("HomeMain");
       });
 
@@ -213,24 +248,24 @@ export default function AddRecipeScreen({ navigation, route }) {
           height: hp(55),
           justifyContent: "center",
           paddingLeft: wp(27),
-          borderBottomWidth: item.title === "Low Calorie" ? 0 : 1,
+          borderBottomWidth: item.category === "Low Calorie" ? 0 : 1,
           borderBottomColor: colors.darkGrey,
           backgroundColor:
-            category === item.title ? colors.primary : colors.white,
+            category === item.category ? colors.primary : colors.white,
         }}
         onPress={() => {
-          setCategory(item.title);
+          setCategory(item.category);
           setVisibleCategory(false);
         }}
       >
         <Text
           style={{
-            fontFamily: category === item.title ? "Bold" : "Regular",
+            fontFamily: category === item.category ? "Bold" : "Regular",
             fontSize: hp(12),
-            color: category === item.title ? colors.white : colors.black,
+            color: category === item.category ? colors.white : colors.black,
           }}
         >
-          {item.title}
+          {item.category}
         </Text>
       </TouchableOpacity>
     );
@@ -243,24 +278,25 @@ export default function AddRecipeScreen({ navigation, route }) {
           height: hp(55),
           justifyContent: "center",
           paddingLeft: wp(27),
-          borderBottomWidth: item.title === "Other Cuisine" ? 0 : 1,
+          borderBottomWidth: item.cuisineType === "Other Cuisine" ? 0 : 1,
           borderBottomColor: colors.darkGrey,
           backgroundColor:
-            cuisineType === item.title ? colors.primary : colors.white,
+            cuisineType === item.cuisineType ? colors.primary : colors.white,
         }}
         onPress={() => {
-          setCuisineType(item.title);
+          setCuisineType(item.cuisineType);
           setVisibleCuisineType(false);
         }}
       >
         <Text
           style={{
-            fontFamily: cuisineType === item.title ? "Bold" : "Regular",
+            fontFamily: cuisineType === item.cuisineType ? "Bold" : "Regular",
             fontSize: hp(12),
-            color: cuisineType === item.title ? colors.white : colors.black,
+            color:
+              cuisineType === item.cuisineType ? colors.white : colors.black,
           }}
         >
-          {item.title}
+          {item.cuisineType}
         </Text>
       </TouchableOpacity>
     );
@@ -689,9 +725,11 @@ export default function AddRecipeScreen({ navigation, route }) {
           </TouchableOpacity>
         </View>
         <Button
-          title="Add Recipe"
+          title={title === "Edit Recipe" ? title : "Add Recipe"}
           addStyle={{ marginTop: hp(25) }}
-          onPress={() => handleAddRecipe()}
+          onPress={() => {
+            title === "Edit Recipe" ? handleEditRecipe() : handleAddRecipe();
+          }}
         />
       </View>
     );

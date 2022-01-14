@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import ViewShot from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+import React, { useState, useRef } from "react";
 import { db } from "../../config/Fire";
 import { getAuth } from "firebase/auth";
 import {
   doc,
   collection,
   updateDoc,
+  deleteDoc,
   arrayUnion,
   arrayRemove,
 } from "firebase/firestore";
@@ -18,6 +21,7 @@ import {
   Text,
   TouchableOpacity,
   FlatList,
+  Keyboard,
 } from "react-native";
 import { Menu, MenuItem } from "react-native-material-menu";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -44,7 +48,24 @@ export default function RecipeScreen({ navigation, route }) {
   const { recipeItem } = route.params;
   const { loadingDoc, dataDoc } = useDoc(userRef);
   const { loadingCollection, dataCollection } = useCollection(recipeRef);
+  const [favourite, setFavourite] = useState(recipeItem.favourite);
   const [menu, setMenu] = useState(false);
+  const viewShot = useRef();
+
+  const captureAndShareScreenshot = () => {
+    viewShot.current.capture().then((uri) => {
+      console.log("do something with ", uri);
+      Sharing.shareAsync("file://" + uri);
+    }),
+      (error) => console.error("Oops, snapshot failed", error);
+  };
+
+  const handleDeleteRecipe = async () => {
+    await deleteDoc(doc(db, "recipe", recipeItem.id)).then(() => {
+      Keyboard.dismiss();
+      navigation.navigate("HomeMain");
+    });
+  };
 
   const handleFavourite = async (item) => {
     if (!item.favourite) {
@@ -181,10 +202,10 @@ export default function RecipeScreen({ navigation, route }) {
 
   const renderHeader = (item) => {
     const rating = parseFloat(item.rating).toFixed(1);
-    let itemLength = 0;
+    let ingredientLength = 0;
 
     if (!_.isEmpty(item.ingredient)) {
-      itemLength = item.ingredient.length;
+      ingredientLength = item.ingredient.length;
     }
 
     return (
@@ -236,12 +257,15 @@ export default function RecipeScreen({ navigation, route }) {
                     alignItems: "center",
                     backgroundColor: "rgba(0, 0, 0, 0.5)",
                   }}
-                  onPress={() => handleFavourite(item)}
+                  onPress={() => {
+                    handleFavourite(item);
+                    setFavourite(!favourite);
+                  }}
                 >
                   <MaterialIcons
-                    name={item.favourite ? "favorite" : "favorite-outline"}
+                    name={favourite ? "favorite" : "favorite-outline"}
                     size={30}
-                    color={item.favourite ? colors.red : colors.white}
+                    color={favourite ? colors.red : colors.white}
                   />
                 </TouchableOpacity>
                 <Menu
@@ -261,7 +285,7 @@ export default function RecipeScreen({ navigation, route }) {
                       onPress={
                         item.userId === auth.currentUser.uid
                           ? () => setMenu(true)
-                          : null
+                          : captureAndShareScreenshot
                       }
                     >
                       <MaterialIcons
@@ -282,6 +306,7 @@ export default function RecipeScreen({ navigation, route }) {
                     onPress={() => {
                       setMenu(false);
                     }}
+                    onPress={captureAndShareScreenshot}
                   >
                     Share
                   </MenuItem>
@@ -300,7 +325,10 @@ export default function RecipeScreen({ navigation, route }) {
                   <MenuItem
                     textStyle={styles.menuTxt}
                     onPress={() => {
-                      setMenu(false);
+                      {
+                        handleDeleteRecipe();
+                        setMenu(false);
+                      }
                     }}
                   >
                     Delete Recipe
@@ -456,7 +484,7 @@ export default function RecipeScreen({ navigation, route }) {
                 color: colors.darkGrey,
               }}
             >
-              {itemLength} Items
+              {ingredientLength} Items
             </Text>
           </View>
         </View>
@@ -555,19 +583,27 @@ export default function RecipeScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <FlatList
-        data={recipeData.ingredient}
-        renderItem={({ item }) => renderIngredient(item)}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={renderHeader(recipeData)}
-        ListFooterComponent={renderFooter(recipeData)}
-        keyboardShouldPersistTaps="always"
-      />
+      <ViewShot ref={viewShot} options={{ format: "jpg", quality: 1 }}>
+        <View style={{ backgroundColor: colors.white }}>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="transparent"
+            translucent={true}
+          />
+          {recipeData ? (
+            <FlatList
+              data={recipeData.ingredient}
+              renderItem={({ item }) => renderIngredient(item)}
+              keyExtractor={(item) => item.id}
+              ListHeaderComponent={renderHeader(recipeData)}
+              ListFooterComponent={renderFooter(recipeData)}
+              keyboardShouldPersistTaps="always"
+            />
+          ) : (
+            <AppLoading />
+          )}
+        </View>
+      </ViewShot>
     </View>
   );
 }

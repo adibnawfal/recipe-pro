@@ -18,7 +18,6 @@ import {
   Dialog,
   Button as PButton,
 } from "react-native-paper";
-import Slider from "@react-native-community/slider";
 import RangeSlider from "react-native-range-slider-expo";
 import { useIsFocused } from "@react-navigation/native";
 import { MaterialIcons } from "@expo/vector-icons";
@@ -32,7 +31,7 @@ import { useCollection } from "../../data/useCollection";
 import { CATEGORY_DATA } from "../../data/CATEGORY_DATA";
 import { CUISINETYPE_DATA } from "../../data/CUISINETYPE_DATA";
 
-export default function FilterSearchScreen({ navigation }) {
+export default function GuestFilterSearchScreen({ navigation }) {
   let [fontsLoaded] = useFonts({
     Regular: require("../../assets/fonts/OpenSans-Regular.ttf"),
     SemiBold: require("../../assets/fonts/OpenSans-SemiBold.ttf"),
@@ -134,7 +133,7 @@ export default function FilterSearchScreen({ navigation }) {
       });
     });
 
-    navigation.navigate("RecipeList", {
+    navigation.navigate("GuestRecipeList", {
       title: "Search Results",
       recipeData: tempIngredientData,
     });

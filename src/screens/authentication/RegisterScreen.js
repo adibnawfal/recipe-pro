@@ -67,6 +67,8 @@ export default function RegisterScreen({ navigation }) {
             await setDoc(doc(db, "users", auth.currentUser.uid), {
               fullName: fullName,
               profilePicture: null,
+              favourite: [],
+              myRecipe: [],
             });
             Keyboard.dismiss();
             setError(null);

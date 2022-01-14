@@ -1,5 +1,10 @@
-import React from "react";
+import ViewShot from "react-native-view-shot";
+import * as Sharing from "expo-sharing";
+import React, { useRef } from "react";
+import { db } from "../../config/Fire";
+import { collection } from "firebase/firestore";
 import AppLoading from "expo-app-loading";
+import _ from "lodash";
 import {
   ImageBackground,
   StyleSheet,
@@ -15,8 +20,8 @@ import { useFonts } from "expo-font";
 
 import { wp, hp } from "../../config/dimensions";
 import { colors } from "../../res/colors";
-
 import { SectionBreak } from "../../components";
+import { useCollection } from "../../data/useCollection";
 
 export default function GuestRecipeScreen({ navigation, route }) {
   let [fontsLoaded] = useFonts({
@@ -25,13 +30,48 @@ export default function GuestRecipeScreen({ navigation, route }) {
     Bold: require("../../assets/fonts/OpenSans-Bold.ttf"),
   });
 
-  const { item } = route.params;
+  const recipeRef = collection(db, "recipe");
 
-  if (!fontsLoaded) {
-    return <AppLoading />;
-  }
+  const { recipeItem } = route.params;
+  const { loadingCollection, dataCollection } = useCollection(recipeRef);
+  const viewShot = useRef();
+
+  const captureAndShareScreenshot = () => {
+    viewShot.current.capture().then((uri) => {
+      console.log("do something with ", uri);
+      Sharing.shareAsync("file://" + uri);
+    }),
+      (error) => console.error("Oops, snapshot failed", error);
+  };
+
+  const convertToFraction = (item) => {
+    var gcd = function (a, b) {
+      if (b < 0.0000001) return a; // Since there is a limited precision we need to limit the value.
+
+      return gcd(b, Math.floor(a % b)); // Discard any fractions due to limitations in precision.
+    };
+
+    var fraction = item;
+    var len = fraction.toString().length - 2;
+
+    var denominator = Math.pow(10, len);
+    var numerator = fraction * denominator;
+
+    var divisor = gcd(numerator, denominator);
+
+    numerator /= divisor;
+    denominator /= divisor;
+
+    return Math.floor(numerator) + "/" + Math.floor(denominator);
+  };
 
   const renderIngredient = (item) => {
+    let value = 0;
+
+    Number.isInteger(item.value)
+      ? (value = item.value.toString())
+      : (value = convertToFraction(item.value));
+
     return (
       <View
         style={{
@@ -78,7 +118,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
             color: colors.black,
           }}
         >
-          {item.measure}
+          {value + " " + item.measure}
         </Text>
       </View>
     );
@@ -116,10 +156,17 @@ export default function GuestRecipeScreen({ navigation, route }) {
   };
 
   const renderHeader = (item) => {
+    const rating = parseFloat(item.rating).toFixed(1);
+    let itemLength = 0;
+
+    if (!_.isEmpty(item.ingredient)) {
+      itemLength = item.ingredient.length;
+    }
+
     return (
       <View>
         <ImageBackground
-          source={item.image}
+          source={{ uri: item.image }}
           resizeMode="cover"
           style={{ height: hp(230) }}
         >
@@ -164,6 +211,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
                   alignItems: "center",
                   backgroundColor: "rgba(0, 0, 0, 0.5)",
                 }}
+                onPress={captureAndShareScreenshot}
               >
                 <MaterialIcons name="share" size={30} color={colors.white} />
               </TouchableOpacity>
@@ -195,7 +243,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
               color: colors.darkGrey,
             }}
           >
-            {item.by}
+            {item.userName}
           </Text>
           <View
             style={{
@@ -221,7 +269,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
                     color: colors.black,
                   }}
                 >
-                  {item.rating}
+                  {rating}
                 </Text>
                 <Text
                   style={{
@@ -250,7 +298,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
                     color: colors.black,
                   }}
                 >
-                  {item.time}
+                  {item.time + " Min"}
                 </Text>
                 <Text
                   style={{
@@ -326,6 +374,12 @@ export default function GuestRecipeScreen({ navigation, route }) {
   };
 
   const renderFooter = (item) => {
+    let stepLength = 0;
+
+    if (!_.isEmpty(item.ingredient)) {
+      stepLength = item.step.length;
+    }
+
     return (
       <View
         style={{
@@ -358,7 +412,7 @@ export default function GuestRecipeScreen({ navigation, route }) {
               color: colors.darkGrey,
             }}
           >
-            {item.step.length} Steps
+            {stepLength} Steps
           </Text>
         </View>
         <FlatList
@@ -371,21 +425,35 @@ export default function GuestRecipeScreen({ navigation, route }) {
     );
   };
 
+  if (!fontsLoaded || loadingCollection) {
+    return <AppLoading />;
+  }
+
+  let recipeData = {};
+
+  recipeData = _.find(dataCollection, (doc) => {
+    return doc.id === recipeItem.id;
+  });
+
   return (
     <View style={styles.container}>
-      <StatusBar
-        barStyle="light-content"
-        backgroundColor="transparent"
-        translucent={true}
-      />
-      <FlatList
-        data={item.ingredient}
-        renderItem={({ item }) => renderIngredient(item)}
-        keyExtractor={(item) => item.id}
-        ListHeaderComponent={() => renderHeader(item)}
-        ListFooterComponent={() => renderFooter(item)}
-        keyboardShouldPersistTaps="always"
-      />
+      <ViewShot ref={viewShot} options={{ format: "jpg", quality: 1 }}>
+        <View style={{ backgroundColor: colors.white }}>
+          <StatusBar
+            barStyle="light-content"
+            backgroundColor="transparent"
+            translucent={true}
+          />
+          <FlatList
+            data={recipeData.ingredient}
+            renderItem={({ item }) => renderIngredient(item)}
+            keyExtractor={(item) => item.id}
+            ListHeaderComponent={renderHeader(recipeData)}
+            ListFooterComponent={renderFooter(recipeData)}
+            keyboardShouldPersistTaps="always"
+          />
+        </View>
+      </ViewShot>
     </View>
   );
 }
